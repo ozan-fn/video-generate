@@ -6,10 +6,14 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 
-export async function generateImage(prompt: string, images: string[]): Promise<string> {
+export async function generateImage(prompt: string, images: string[]): Promise<string | { error: string; screenshot: string }> {
+    let browser: any;
+    let page: any;
+    const imagePaths: string[] = [];
+
     try {
-        const browser = await getBrowser();
-        const page = await browser.newPage();
+        browser = await getBrowser();
+        page = await browser.newPage();
 
         // Load cookies from database
         const cookieDoc = await CookieModel.findOne({ type: "google" });
@@ -23,7 +27,6 @@ export async function generateImage(prompt: string, images: string[]): Promise<s
 
         // Save base64 images to temp files
         const tempDir = os.tmpdir();
-        const imagePaths: string[] = [];
         for (let i = 0; i < images.length; i++) {
             const base64 = images[i];
             const buffer = Buffer.from(base64.split(",")[1], "base64");
@@ -72,6 +75,32 @@ export async function generateImage(prompt: string, images: string[]): Promise<s
         return base64;
     } catch (error) {
         console.error("Error:", error);
-        throw error;
+        // Clean up temp files on error
+        imagePaths.forEach((filePath) => {
+            try {
+                fs.unlinkSync(filePath);
+            } catch (e) {
+                console.error(`Failed to clean up ${filePath}:`, e);
+            }
+        });
+        // Capture screenshot on error
+        let screenshot: string | null = null;
+        try {
+            if (page) {
+                const screenshotBuffer = await page.screenshot({ encoding: "base64" });
+                screenshot = `data:image/png;base64,${screenshotBuffer}`;
+            }
+        } catch (screenshotError) {
+            console.error("Failed to capture screenshot:", screenshotError);
+        } finally {
+            if (browser) {
+                try {
+                    await browser.close();
+                } catch (closeError) {
+                    console.error("Failed to close browser:", closeError);
+                }
+            }
+        }
+        throw { error: error instanceof Error ? error.message : "Unknown error", screenshot };
     }
 }

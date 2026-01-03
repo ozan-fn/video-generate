@@ -6,12 +6,16 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 
-export async function generateVideo(imageBuffer: Buffer, prompt: string): Promise<string> {
+export async function generateVideo(imageBuffer: Buffer, prompt: string): Promise<string | { error: string; screenshot: string }> {
+    let browser: any;
+    let page: any;
+    let imagePath = "";
+
     try {
         await mongoose.connect(process.env.DATABASE_URL!);
 
-        const browser = await getBrowser();
-        const page = await browser.newPage();
+        browser = await getBrowser();
+        page = await browser.newPage();
 
         // Load cookies from database
         const cookieDoc = await CookieModel.findOne({ type: "grok" });
@@ -20,7 +24,7 @@ export async function generateVideo(imageBuffer: Buffer, prompt: string): Promis
 
         // Create temp file from buffer
         const tempDir = os.tmpdir();
-        const imagePath = path.join(tempDir, `image_${Date.now()}.png`);
+        imagePath = path.join(tempDir, `image_${Date.now()}.png`);
         fs.writeFileSync(imagePath, imageBuffer);
 
         await page.goto("https://grok.com/imagine");
@@ -56,6 +60,32 @@ export async function generateVideo(imageBuffer: Buffer, prompt: string): Promis
         return videoSrc64;
     } catch (error) {
         console.error("Error:", error);
-        throw error;
+        // Clean up temp file on error
+        if (imagePath) {
+            try {
+                fs.unlinkSync(imagePath);
+            } catch (e) {
+                console.error(`Failed to clean up ${imagePath}:`, e);
+            }
+        }
+        // Capture screenshot on error
+        let screenshot: string | null = null;
+        try {
+            if (page) {
+                const screenshotBuffer = await page.screenshot({ encoding: "base64" });
+                screenshot = `data:image/png;base64,${screenshotBuffer}`;
+            }
+        } catch (screenshotError) {
+            console.error("Failed to capture screenshot:", screenshotError);
+        } finally {
+            if (browser) {
+                try {
+                    await browser.close();
+                } catch (closeError) {
+                    console.error("Failed to close browser:", closeError);
+                }
+            }
+        }
+        throw { error: error instanceof Error ? error.message : "Unknown error", screenshot };
     }
 }

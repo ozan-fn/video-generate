@@ -9,6 +9,8 @@ export default function VideoGenerator({ image }: VideoGeneratorProps) {
     const [videoPrompt, setVideoPrompt] = useState("make a 10 second video with this image");
     const [videoLoading, setVideoLoading] = useState(false);
     const [videoResult, setVideoResult] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [screenshot, setScreenshot] = useState<string | null>(null);
     const { token } = useAuth();
 
     const base64ToFile = (base64: string, filename: string): File => {
@@ -25,10 +27,11 @@ export default function VideoGenerator({ image }: VideoGeneratorProps) {
 
     const handleGenerateVideo = async () => {
         if (!image || !videoPrompt) {
-            alert("No image or prompt for video generation.");
+            setError("No image or prompt for video generation.");
             return;
         }
         setVideoLoading(true);
+        setError(null);
         try {
             const formData = new FormData();
             const imageFile = base64ToFile(image, "generated-image.png");
@@ -42,15 +45,18 @@ export default function VideoGenerator({ image }: VideoGeneratorProps) {
                 },
                 body: formData,
             });
+            const data = await res.json();
             if (res.ok) {
-                const data = await res.json();
                 setVideoResult(data.video);
+                setScreenshot(null);
             } else {
-                alert("Video generation failed");
+                setError(data.error || "Video generation failed");
+                setScreenshot(data.screenshot || null);
             }
         } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Error generating video";
+            setError(errorMessage);
             console.error(err);
-            alert("Error generating video");
         } finally {
             setVideoLoading(false);
         }
@@ -63,6 +69,7 @@ export default function VideoGenerator({ image }: VideoGeneratorProps) {
                 <label class="block text-sm font-medium text-gray-700">Video Prompt</label>
                 <textarea value={videoPrompt} onInput={(e: Event) => setVideoPrompt((e.target as HTMLTextAreaElement).value)} class="mt-1 block w-full p-2 border border-gray-300 rounded-md" rows={2} />
             </div>
+            {error && <div class="mt-2 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
             <button onClick={handleGenerateVideo} disabled={videoLoading} class="mt-2 w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:opacity-50">
                 {videoLoading ? "Generating Video..." : "Generate Video"}
             </button>
@@ -70,6 +77,12 @@ export default function VideoGenerator({ image }: VideoGeneratorProps) {
                 <div class="mt-4">
                     <h4 class="text-md">Generated Video</h4>
                     <video src={videoResult} controls class="w-full mt-2" />
+                </div>
+            )}
+            {screenshot && (
+                <div class="mt-4 p-4 bg-blue-50 rounded">
+                    <h3 class="text-lg font-semibold mb-2">Screenshot saat error</h3>
+                    <img src={screenshot} alt="Screenshot" class="w-full rounded border border-blue-200" />
                 </div>
             )}
         </div>

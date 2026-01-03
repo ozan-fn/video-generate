@@ -10,6 +10,8 @@ export default function ImageGenerator({ onImageGenerated }: ImageGeneratorProps
     const [images, setImages] = useState<string[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [screenshot, setScreenshot] = useState<string | null>(null);
     const { token } = useAuth();
 
     const handleFileChange1 = (e: Event) => {
@@ -41,10 +43,11 @@ export default function ImageGenerator({ onImageGenerated }: ImageGeneratorProps
     const handleSubmit = async (e: Event) => {
         e.preventDefault();
         if (!prompt || images.filter((i) => i).length < 2) {
-            alert("Please provide prompt and 2 images.");
+            setError("Please provide prompt and 2 images.");
             return;
         }
         setLoading(true);
+        setError(null);
         try {
             const res = await fetch("/api/generate", {
                 method: "POST",
@@ -54,15 +57,14 @@ export default function ImageGenerator({ onImageGenerated }: ImageGeneratorProps
                 },
                 body: JSON.stringify({ prompt, images: images.filter((i) => i) }),
             });
+            const data = await res.json();
             if (res.ok) {
-                const data = await res.json();
                 onImageGenerated(data.image);
-            } else {
-                alert("Generation failed");
-            }
+                setScreenshot(null);\n            } else {\n                setError(data.error || \"Generation failed\");\n                setScreenshot(data.screenshot || null);\n            }
         } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : "Error generating image";
+            setError(errorMessage);
             console.error(err);
-            alert("Error generating image");
         } finally {
             setLoading(false);
         }
@@ -86,6 +88,7 @@ export default function ImageGenerator({ onImageGenerated }: ImageGeneratorProps
                         <input type="file" accept="image/*" onChange={(e: Event) => handleFileChange2(e)} class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required />
                     </div>
                 </div>
+                {error && <div class="mb-4 p-3 bg-red-100 text-red-700 rounded">{error}</div>}
                 {previews.some((p) => p) && (
                     <div class="mb-4">
                         <label class="block text-sm font-medium text-gray-700">Preview</label>
@@ -96,6 +99,12 @@ export default function ImageGenerator({ onImageGenerated }: ImageGeneratorProps
                     {loading ? "Generating..." : "Generate"}
                 </button>
             </form>
+            {screenshot && (
+                <div class="mt-4 p-4 bg-blue-50 rounded">
+                    <h3 class="text-lg font-semibold mb-2">Screenshot saat error</h3>
+                    <img src={screenshot} alt="Screenshot" class="w-full rounded border border-blue-200" />
+                </div>
+            )}
         </div>
     );
 }

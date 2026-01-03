@@ -17,7 +17,13 @@ router.post("/", authenticateToken, async (req, res) => {
         res.json({ image: base64 });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: "Generation failed" });
+        const errorResponse: { error: string; screenshot?: string } = {
+            error: error instanceof Object && "error" in error ? (error as any).error : "Generation failed",
+        };
+        if (error instanceof Object && "screenshot" in error && (error as any).screenshot) {
+            errorResponse.screenshot = (error as any).screenshot;
+        }
+        res.status(500).json(errorResponse);
     }
 });
 
