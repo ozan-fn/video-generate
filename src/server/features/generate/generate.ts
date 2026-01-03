@@ -1,5 +1,4 @@
 import express from "express";
-import { authenticateToken } from "../auth/auth.js";
 import "dotenv/config";
 import mongoose from "mongoose";
 import CookieModel from "../../models/cookieModel.js";
