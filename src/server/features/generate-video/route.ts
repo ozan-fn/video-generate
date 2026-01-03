@@ -1,11 +1,12 @@
 import express from "express";
 import multer from "multer";
 import { generateVideo } from "./generate-video";
+import { authenticateToken } from "../auth/auth";
 
 const router = express.Router();
 const upload = multer({ dest: "uploads/" });
 
-router.post("/", upload.single("image"), async (req, res) => {
+router.post("/", authenticateToken, upload.single("image"), async (req, res) => {
     try {
         const { prompt } = req.body;
         const imagePath = req.file?.path;

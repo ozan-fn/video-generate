@@ -1,9 +1,10 @@
 import express from "express";
 import { generateImage } from "./generate.js";
+import { authenticateToken } from "../auth/auth.js";
 
 const router = express.Router();
 
-router.post("/", async (req, res) => {
+router.post("/", authenticateToken, async (req, res) => {
     try {
         const { prompt, images } = req.body; // images: string[] base64
 

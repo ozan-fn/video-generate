@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import compression from "compression";
 import authRouter, { authenticateToken } from "./features/auth/auth.js";
 import generateRouter from "./features/generate/route.js";
 import generateVideoRouter from "./features/generate-video/route.js";
@@ -11,6 +12,7 @@ mongoose.connect(process.env.DATABASE_URL!);
 const app = express();
 const port = 3000;
 
+app.use(compression());
 app.use(express.json({ limit: "10mb" }));
 
 app.use("/api/auth", authRouter);
