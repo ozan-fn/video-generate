@@ -1,11 +1,12 @@
 import { useState } from "preact/hooks";
+import { h } from "preact";
 import { useAuth } from "../contexts/AuthContext";
 
 interface VideoGeneratorProps {
     image: string;
 }
 
-export default function VideoGenerator({ image }: VideoGeneratorProps) {
+export default function VideoGenerator({ image }: VideoGeneratorProps): h.JSX.Element {
     const [videoPrompt, setVideoPrompt] = useState("make a 10 second video with this image");
     const [videoLoading, setVideoLoading] = useState(false);
     const [videoResult, setVideoResult] = useState<string | null>(null);

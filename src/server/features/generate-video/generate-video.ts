@@ -38,7 +38,7 @@ export async function generateVideo(imageBuffer: Buffer, prompt: string): Promis
 
         await page.waitForSelector('video[id="sd-video"]', { visible: true, timeout: 120_000 });
 
-        const videoSrc64 = await page.$eval('video[id="sd-video"]', async (e) => {
+        const videoSrc64 = await page.$eval('video[id="sd-video"]', async (e: any) => {
             const res = await fetch(e.src);
             const blob = await res.blob();
 

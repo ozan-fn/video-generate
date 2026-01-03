@@ -53,7 +53,7 @@ export async function generateImage(prompt: string, images: string[]): Promise<s
         await page.waitForSelector('mat-icon[fonticon="send"]', { hidden: true });
         await page.waitForSelector('mat-icon[fonticon="mic"]', { visible: true, timeout: 120_000 });
 
-        const base64 = await page.$eval("div.container img", async (e) => {
+        const base64 = await page.$eval("div.container img", async (e: any) => {
             const res = await fetch(e.src);
             const blob = await res.blob();
 

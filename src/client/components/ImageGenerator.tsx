@@ -1,11 +1,12 @@
 import { useState } from "preact/hooks";
+import { h } from "preact";
 import { useAuth } from "../contexts/AuthContext";
 
 interface ImageGeneratorProps {
     onImageGenerated: (image: string) => void;
 }
 
-export default function ImageGenerator({ onImageGenerated }: ImageGeneratorProps) {
+export default function ImageGenerator({ onImageGenerated }: ImageGeneratorProps): h.JSX.Element {
     const [prompt, setPrompt] = useState("editkan gambar agar gambar ini menyatu dengan model menggunakan nano banana");
     const [images, setImages] = useState<string[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
@@ -60,7 +61,11 @@ export default function ImageGenerator({ onImageGenerated }: ImageGeneratorProps
             const data = await res.json();
             if (res.ok) {
                 onImageGenerated(data.image);
-                setScreenshot(null);\n            } else {\n                setError(data.error || \"Generation failed\");\n                setScreenshot(data.screenshot || null);\n            }
+                setScreenshot(null);
+            } else {
+                setError(data.error || "Generation failed");
+                setScreenshot(data.screenshot || null);
+            }
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : "Error generating image";
             setError(errorMessage);
