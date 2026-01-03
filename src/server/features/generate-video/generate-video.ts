@@ -2,8 +2,11 @@ import { getBrowser } from "../../shared/browser.js";
 import mongoose from "mongoose";
 import CookieModel from "../../models/cookieModel.js";
 import type { Cookie } from "puppeteer-core";
+import fs from "fs";
+import path from "path";
+import os from "os";
 
-export async function generateVideo(imagePath: string, prompt: string): Promise<string> {
+export async function generateVideo(imageBuffer: Buffer, prompt: string): Promise<string> {
     try {
         await mongoose.connect(process.env.DATABASE_URL!);
 
@@ -14,6 +17,11 @@ export async function generateVideo(imagePath: string, prompt: string): Promise<
         const cookieDoc = await CookieModel.findOne({ type: "grok" });
         const cookies = cookieDoc ? JSON.parse(cookieDoc.cookies!) : [];
         await page.setCookie(...(cookies as Cookie[]));
+
+        // Create temp file from buffer
+        const tempDir = os.tmpdir();
+        const imagePath = path.join(tempDir, `image_${Date.now()}.png`);
+        fs.writeFileSync(imagePath, imageBuffer);
 
         await page.goto("https://grok.com/imagine");
 
@@ -39,6 +47,9 @@ export async function generateVideo(imagePath: string, prompt: string): Promise<
 
         const acookies = await page.cookies();
         await CookieModel.findOneAndUpdate({ type: "grok" }, { type: "grok", cookies: JSON.stringify(acookies) }, { upsert: true });
+
+        // Clean up temp file
+        fs.unlinkSync(imagePath);
 
         await browser.close();
 
