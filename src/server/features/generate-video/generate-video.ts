@@ -1,14 +1,14 @@
 import { getBrowser } from "../../shared/browser.js";
 import mongoose from "mongoose";
 import CookieModel from "../../models/cookieModel.js";
-import type { Cookie } from "puppeteer-core";
+import type { Cookie, Page } from "puppeteer-core";
 import fs from "fs";
 import path from "path";
 import os from "os";
 
 export async function generateVideo(imageBuffer: Buffer, prompt: string): Promise<string | { error: string; screenshot: string }> {
     let browser: any;
-    let page: any;
+    let page: Page;
     let imagePath = "";
 
     try {
@@ -21,6 +21,7 @@ export async function generateVideo(imageBuffer: Buffer, prompt: string): Promis
         const cookieDoc = await CookieModel.findOne({ type: "grok" });
         const cookies = cookieDoc ? JSON.parse(cookieDoc.cookies!) : [];
         await page.setCookie(...(cookies as Cookie[]));
+        await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36 OPR/124.0.0.0");
 
         // Create temp file from buffer
         const tempDir = os.tmpdir();
