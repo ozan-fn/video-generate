@@ -1,4 +1,5 @@
-import "dotenv/config";
+import { config } from "dotenv";
+config({ override: true });
 import express from "express";
 import compression from "compression";
 import authRouter, { authenticateToken } from "./features/auth/auth.js";
