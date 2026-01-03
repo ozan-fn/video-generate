@@ -1,0 +1,86 @@
+import express from "express";
+import { authenticateToken } from "../auth/auth.js";
+import "dotenv/config";
+import mongoose from "mongoose";
+import CookieModel from "../../models/cookieModel.js";
+import { getBrowser } from "../../shared/browser.js";
+import type { Cookie } from "puppeteer-core";
+import fs from "fs";
+import path from "path";
+import os from "os";
+
+const router = express.Router();
+
+router.post("/", async (req, res) => {
+    try {
+        const { prompt, images } = req.body; // images: string[] base64
+
+        const browser = await getBrowser();
+        const page = await browser.newPage();
+
+        // Load cookies from database
+        const cookieDoc = await CookieModel.findOne();
+        const cookies = cookieDoc ? JSON.parse(cookieDoc.cookies!) : [];
+        await page.setCookie(...(cookies as Cookie[]));
+        await page.goto("https://gemini.google.com");
+
+        await page.waitForSelector('mat-icon[fonticon="add_2"]', { visible: true });
+        await page.click('mat-icon[fonticon="add_2"]');
+
+        // Save base64 images to temp files
+        const tempDir = os.tmpdir();
+        const imagePaths: string[] = [];
+        for (let i = 0; i < images.length; i++) {
+            const base64 = images[i];
+            const buffer = Buffer.from(base64.split(",")[1], "base64");
+            const filePath = path.join(tempDir, `image_${i}.png`);
+            fs.writeFileSync(filePath, buffer);
+            imagePaths.push(filePath);
+            console.log(`Saved image ${i} to ${filePath}, size: ${buffer.length}`);
+        }
+
+        const [fileChooser] = await Promise.all([page.waitForFileChooser(), page.click('mat-icon[fonticon="attach_file"]')]);
+        console.log("Accepting files:", imagePaths);
+        await fileChooser.accept(imagePaths);
+        console.log("Files accepted.");
+
+        await page.type("rich-textarea", prompt);
+
+        await page.waitForFunction(() => {
+            const element = document.querySelector("div.mat-mdc-tooltip-trigger:nth-child(2)");
+            return element && !element.classList.contains("disabled");
+        });
+
+        await page.keyboard.press("Enter");
+
+        await page.waitForSelector('mat-icon[fonticon="send"]', { hidden: true });
+        await page.waitForSelector('mat-icon[fonticon="mic"]', { visible: true, timeout: 120_000 });
+
+        const base64 = await page.$eval("div.container img", async (e) => {
+            const res = await fetch(e.src);
+            const blob = await res.blob();
+
+            return await new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.readAsDataURL(blob);
+            });
+        });
+
+        const acookies = await page.cookies();
+        await CookieModel.findOneAndUpdate({}, { cookies: JSON.stringify(acookies) }, { upsert: true });
+
+        // Clean up temp files
+        imagePaths.forEach(fs.unlinkSync);
+
+        await browser.close();
+        await mongoose.disconnect();
+
+        res.json({ image: base64 });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Generation failed" });
+    }
+});
+
+export default router;

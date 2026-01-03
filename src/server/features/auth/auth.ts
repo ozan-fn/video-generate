@@ -1,0 +1,50 @@
+import express from "express";
+import jwt from "jsonwebtoken";
+
+const router = express.Router();
+
+router.post("/login", async (req, res) => {
+    const { username, password } = req.body;
+
+    const envUsername = process.env.USERNAME;
+    const envPassword = process.env.PASSWORD;
+    const jwtSecret = process.env.JWT_SECRET || "default_secret";
+    console.log(envUsername, envPassword);
+    if (!envUsername || !envPassword) {
+        return res.status(500).json({ message: "Server configuration error" });
+    }
+
+    if (username !== envUsername) {
+        return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    if (password !== envPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = jwt.sign({ username }, jwtSecret, { expiresIn: "1h" });
+
+    res.json({ token });
+});
+
+export const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+
+    if (!token) {
+        return res.status(401).json({ message: "Access token required" });
+    }
+
+    const jwtSecret = process.env.JWT_SECRET || "default_secret";
+
+    jwt.verify(token, jwtSecret, (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: "Invalid token" });
+        }
+
+        (req as any).user = user;
+        next();
+    });
+};
+
+export default router;
