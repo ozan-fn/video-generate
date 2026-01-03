@@ -14,7 +14,7 @@ export async function getBrowser() {
         browser = await puppeteer.launch({
             executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", // Adjust path for your OS
             headless: false,
-            pipe: true,
+            // pipe: true,
             enableExtensions: [path.join(__dirname, "../../../NopeCHA")],
             args: [
                 "--disable-blink-features=AutomationControlled", //
@@ -26,7 +26,7 @@ export async function getBrowser() {
         browser = await puppeteer.launch({
             executablePath: await chromium.executablePath(),
             headless: "shell",
-            pipe: true,
+            // pipe: true,
             enableExtensions: [path.join(__dirname, "../../../NopeCHA")],
             args: [
                 ...chromium.args, //
