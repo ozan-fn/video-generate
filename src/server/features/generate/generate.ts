@@ -18,7 +18,7 @@ router.post("/", async (req, res) => {
         const page = await browser.newPage();
 
         // Load cookies from database
-        const cookieDoc = await CookieModel.findOne();
+        const cookieDoc = await CookieModel.findOne({ type: "google" });
         const cookies = cookieDoc ? JSON.parse(cookieDoc.cookies!) : [];
         await page.setCookie(...(cookies as Cookie[]));
         await page.goto("https://gemini.google.com");
@@ -67,7 +67,7 @@ router.post("/", async (req, res) => {
         });
 
         const acookies = await page.cookies();
-        await CookieModel.findOneAndUpdate({}, { cookies: JSON.stringify(acookies) }, { upsert: true });
+        await CookieModel.findOneAndUpdate({ type: "google" }, { type: "google", cookies: JSON.stringify(acookies) }, { upsert: true });
 
         // Clean up temp files
         imagePaths.forEach(fs.unlinkSync);

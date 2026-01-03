@@ -22,7 +22,7 @@ import type { Cookie } from "puppeteer-core";
 
     // Load cookies from database
     console.log("Loading cookies from database...");
-    const cookieDoc = await CookieModel.findOne();
+    const cookieDoc = await CookieModel.findOne({ type: "google" });
     const cookies = cookieDoc ? JSON.parse(cookieDoc.cookies!) : [];
     console.log("Loaded", cookies.length, "cookies.");
 
@@ -78,7 +78,7 @@ import type { Cookie } from "puppeteer-core";
 
     console.log("Updating cookies in database...");
     const acookies = await page.cookies();
-    await CookieModel.findOneAndUpdate({}, { cookies: JSON.stringify(acookies) }, { upsert: true });
+    await CookieModel.findOneAndUpdate({ type: "google" }, { type: "google", cookies: JSON.stringify(acookies) }, { upsert: true });
     console.log("Cookies updated.");
 
     console.log("Closing browser...");

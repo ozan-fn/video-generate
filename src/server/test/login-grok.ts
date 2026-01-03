@@ -12,16 +12,17 @@ import CookieModel from "../models/cookieModel.js";
         const browser = await getBrowser();
 
         const page = await browser.newPage();
-        await page.goto("https://gemini.google.com/app");
+        await page.goto("https://accounts.x.ai/sign-in?redirect=grok-com");
 
-        if (await page.$('a[aria-label="Sign in"]')) {
-            await page.click('a[aria-label="Sign in"]');
-        }
-        await page.waitForSelector(".textarea", { timeout: 0, visible: true });
+        await page.waitForSelector("textarea", { timeout: 0, visible: true });
+
         const cookies = await page.cookies();
-        await CookieModel.findOneAndUpdate({ type: "google" }, { type: "google", cookies: JSON.stringify(cookies) }, { upsert: true });
+        await CookieModel.findOneAndUpdate({ type: "grok" }, { type: "grok", cookies: JSON.stringify(cookies) }, { upsert: true });
 
         await browser.close();
+
         await mongoose.disconnect();
-    } catch (error) {}
+    } catch (error) {
+        console.error("Error:", error);
+    }
 })();
