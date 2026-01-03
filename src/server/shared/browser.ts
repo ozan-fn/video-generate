@@ -11,10 +11,11 @@ export async function getBrowser() {
     }
 
     if (process.env.NODE_ENV === "development") {
+        // Development: gunakan enableExtensions
         browser = await puppeteer.launch({
             executablePath: "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe", // Adjust path for your OS
             headless: false,
-            // pipe: true,
+            pipe: true,
             enableExtensions: [path.join(__dirname, "../../../NopeCHA")],
             args: [
                 "--disable-blink-features=AutomationControlled", //
@@ -23,12 +24,13 @@ export async function getBrowser() {
             // userDataDir: "./puppeteer_data",
         });
     } else {
+        // Production: gunakan --load-extension flag
         browser = await puppeteer.launch({
             executablePath: await chromium.executablePath(),
             headless: "shell",
-            // pipe: true,
-            enableExtensions: [path.join(__dirname, "../../../NopeCHA")],
+            pipe: true,
             args: [
+                `--load-extension=${path.join(__dirname, "../../../NopeCHA")}`,
                 ...chromium.args, //
                 "--disable-blink-features=AutomationControlled",
                 "--disable-web-security",
