@@ -47,11 +47,11 @@ export default function Login() {
                 <form onSubmit={handleSubmit}>
                     <div class="mb-4">
                         <label class="block text-sm font-medium mb-2">Username</label>
-                        <input type="text" value={username} onInput={(e) => setUsername((e.target as HTMLInputElement).value)} class="w-full p-2 border rounded" required disabled={loading} />
+                        <input type="text" value={username} onInput={(e: Event) => setUsername((e.target as HTMLInputElement).value)} class="w-full p-2 border rounded" required disabled={loading} />
                     </div>
                     <div class="mb-4">
                         <label class="block text-sm font-medium mb-2">Password</label>
-                        <input type="password" value={password} onInput={(e) => setPassword((e.target as HTMLInputElement).value)} class="w-full p-2 border rounded" required disabled={loading} />
+                        <input type="password" value={password} onInput={(e: Event) => setPassword((e.target as HTMLInputElement).value)} class="w-full p-2 border rounded" required disabled={loading} />
                     </div>
                     <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded" disabled={loading}>
                         {loading ? "Logging in..." : "Login"}

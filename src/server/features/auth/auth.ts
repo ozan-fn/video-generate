@@ -37,14 +37,13 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
 
     const jwtSecret = process.env.JWT_SECRET || "default_secret";
 
-    jwt.verify(token, jwtSecret, (err, user) => {
-        if (err) {
-            return res.status(403).json({ message: "Invalid token" });
-        }
-
-        (req as any).user = user;
+    try {
+        const decoded = jwt.verify(token, jwtSecret);
+        (req as any).user = decoded;
         next();
-    });
+    } catch (err) {
+        return res.status(403).json({ message: "Invalid token" });
+    }
 };
 
 export default router;

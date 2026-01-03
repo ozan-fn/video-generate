@@ -74,16 +74,16 @@ export default function ImageGenerator({ onImageGenerated }: ImageGeneratorProps
             <form onSubmit={handleSubmit}>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Prompt</label>
-                    <textarea value={prompt} onInput={(e) => setPrompt((e.target as HTMLTextAreaElement).value)} class="mt-1 block w-full p-2 border border-gray-300 rounded-md" rows={3} required />
+                    <textarea value={prompt} onInput={(e: Event) => setPrompt((e.target as HTMLTextAreaElement).value)} class="mt-1 block w-full p-2 border border-gray-300 rounded-md" rows={3} required />
                 </div>
                 <div class="flex gap-4 mb-4">
                     <div class="flex-1">
                         <label class="block text-sm font-medium text-gray-700">Image 1</label>
-                        <input type="file" accept="image/*" onChange={handleFileChange1} class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required />
+                        <input type="file" accept="image/*" onChange={(e: Event) => handleFileChange1(e)} class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required />
                     </div>
                     <div class="flex-1">
                         <label class="block text-sm font-medium text-gray-700">Image 2</label>
-                        <input type="file" accept="image/*" onChange={handleFileChange2} class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required />
+                        <input type="file" accept="image/*" onChange={(e: Event) => handleFileChange2(e)} class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required />
                     </div>
                 </div>
                 {previews.some((p) => p) && (

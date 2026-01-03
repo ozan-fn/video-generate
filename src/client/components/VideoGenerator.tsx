@@ -61,7 +61,7 @@ export default function VideoGenerator({ image }: VideoGeneratorProps) {
             <h3 class="text-lg">Generate Video from Image</h3>
             <div class="mt-4">
                 <label class="block text-sm font-medium text-gray-700">Video Prompt</label>
-                <textarea value={videoPrompt} onInput={(e) => setVideoPrompt((e.target as HTMLTextAreaElement).value)} class="mt-1 block w-full p-2 border border-gray-300 rounded-md" rows={2} />
+                <textarea value={videoPrompt} onInput={(e: Event) => setVideoPrompt((e.target as HTMLTextAreaElement).value)} class="mt-1 block w-full p-2 border border-gray-300 rounded-md" rows={2} />
             </div>
             <button onClick={handleGenerateVideo} disabled={videoLoading} class="mt-2 w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:opacity-50">
                 {videoLoading ? "Generating Video..." : "Generate Video"}
