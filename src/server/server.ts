@@ -1,7 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import authRouter, { authenticateToken } from "./features/auth/auth.js";
-import generateRouter from "./features/generate/generate.js";
+import generateRouter from "./features/generate/route.js";
+import generateVideoRouter from "./features/generate-video/route.js";
 import mongoose from "mongoose";
 import path from "path";
 
@@ -14,6 +15,7 @@ app.use(express.json({ limit: "10mb" }));
 
 app.use("/api/auth", authRouter);
 app.use("/api/generate", generateRouter);
+app.use("/api/generate-video", generateVideoRouter);
 
 app.get("/api/protected", authenticateToken, (req, res) => {
     res.json({ message: "This is a protected route", user: (req as any).user });

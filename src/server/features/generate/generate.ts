@@ -1,5 +1,3 @@
-import express from "express";
-import "dotenv/config";
 import mongoose from "mongoose";
 import CookieModel from "../../models/cookieModel.js";
 import { getBrowser } from "../../shared/browser.js";
@@ -8,12 +6,8 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 
-const router = express.Router();
-
-router.post("/", async (req, res) => {
+export async function generateImage(prompt: string, images: string[]): Promise<string> {
     try {
-        const { prompt, images } = req.body; // images: string[] base64
-
         const browser = await getBrowser();
         const page = await browser.newPage();
 
@@ -21,6 +15,7 @@ router.post("/", async (req, res) => {
         const cookieDoc = await CookieModel.findOne({ type: "google" });
         const cookies = cookieDoc ? JSON.parse(cookieDoc.cookies!) : [];
         await page.setCookie(...(cookies as Cookie[]));
+
         await page.goto("https://gemini.google.com");
 
         await page.waitForSelector('mat-icon[fonticon="add_2"]', { visible: true });
@@ -73,13 +68,10 @@ router.post("/", async (req, res) => {
         imagePaths.forEach(fs.unlinkSync);
 
         await browser.close();
-        await mongoose.disconnect();
 
-        res.json({ image: base64 });
+        return base64;
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: "Generation failed" });
+        console.error("Error:", error);
+        throw error;
     }
-});
-
-export default router;
+}
