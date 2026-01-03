@@ -1,12 +1,23 @@
 {
     "outputDirectory": "dist",
-    "rewrites": [
-        { "source": "/api/:path*", "destination": "/api/:path*" },
-        { "source": "/(.*)", "destination": "/index.html" }
-    ],
-    "functions": {
-        "src/server/server.ts": {
-            "runtime": "nodejs24.x"
+    "builds": [
+        {
+            "src": "src/server/server.ts",
+            "use": "@vercel/node"
+        },
+        {
+            "src": "dist/**",
+            "use": "@vercel/static"
         }
-    }
+    ],
+    "routes": [
+        {
+            "src": "/api/(.*)",
+            "dest": "/src/server/server.ts"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "/index.html"
+        }
+    ]
 }
