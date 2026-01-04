@@ -1,15 +1,20 @@
 {
-    "outputDirectory": "dist",
-    "builds": [
+    "rewrites": [
         {
-            "src": "src/server/server.ts",
-            "use": "@vercel/node"
-        }
-    ],
-    "routes": [
+            "source": "/api/(.*)",
+            "destination": "/src/server.ts"
+        },
         {
-            "src": "/(.*)",
-            "dest": "/src/server/server.ts"
+            "source": "/assets/(.*)",
+            "destination": "/dist/assets/$1"
+        },
+        {
+            "source": "/(.*)\\.(css|js|png|jpg|jpeg|svg|ico|json|woff|woff2)$",
+            "destination": "/dist/$1.$2"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/dist/index.html"
         }
     ]
 }
