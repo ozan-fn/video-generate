@@ -9,10 +9,19 @@ export default function Login() {
     const { login, token } = useAuth();
 
     useEffect(() => {
-        if (token) {
+        if (token && isTokenValid(token)) {
             route("/generate");
         }
     }, [token]);
+
+    function isTokenValid(token: string): boolean {
+        try {
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            return payload.exp > Date.now() / 1000;
+        } catch {
+            return false;
+        }
+    }
 
     const handleSubmit = async (e: Event) => {
         e.preventDefault();

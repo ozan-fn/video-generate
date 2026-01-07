@@ -7,7 +7,9 @@ interface VideoGeneratorProps {
 }
 
 export default function VideoGenerator({ image }: VideoGeneratorProps): h.JSX.Element {
-    const [videoPrompt, setVideoPrompt] = useState("make a 10 second video with this image");
+    const [videoPrompt, setVideoPrompt] = useState(
+        "Transformasikan sebuah foto seorang model profesional yang sedang memegang produk menjadi video pendek dengan gerakan halus dan realistis. Model perlahan mengubah pose dari posisi statis menjadi lebih hidup: tangan yang memegang produk sedikit bergerak untuk menekankan detail produk, sementara ekspresi wajah berubah dari senyum ringan menjadi tatapan percaya diri. Kamera melakukan pergerakan sinematik berupa zoom-in lembut ke arah produk, lalu bergeser perlahan ke wajah model untuk menampilkan ekspresi. Pencahayaan dibuat dinamis, seolah lampu studio bergeser sedikit sehingga bayangan dan highlight berubah secara natural. Latar belakang tetap minimalis, tetapi diberi efek kedalaman dengan blur halus agar fokus tetap pada model dan produk. Nuansa keseluruhan menyerupai iklan komersial premium dengan kualitas sinematik, resolusi tinggi, dan transisi mulus. Durasi video sekitar 10–15 detik, menekankan hubungan antara model dan produk, seakan-akan sedang memperkenalkan produk kepada audiens dengan gaya elegan dan profesional."
+    );
     const [videoLoading, setVideoLoading] = useState(false);
     const [videoResult, setVideoResult] = useState<string | null>(null);
     const [error, setError] = useState<string | null>(null);

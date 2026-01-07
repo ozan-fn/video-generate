@@ -7,7 +7,9 @@ interface ImageGeneratorProps {
 }
 
 export default function ImageGenerator({ onImageGenerated }: ImageGeneratorProps): h.JSX.Element {
-    const [prompt, setPrompt] = useState("editkan gambar agar gambar ini menyatu dengan model menggunakan nano banana");
+    const [prompt, setPrompt] = useState(
+        "hasilkan gambar seperti gambar nomor 3. gambar yang akan di gunakan adalah gambar nomor 1 dan 2" //
+    );
     const [images, setImages] = useState<string[]>([]);
     const [previews, setPreviews] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);

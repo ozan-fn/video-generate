@@ -7,16 +7,12 @@ import path from "path";
 import os from "os";
 
 export async function generateVideo(imageBuffer: Buffer, prompt: string): Promise<string | { error: string; screenshot: string }> {
-    let browser: any;
-    let page: Page;
+    let browser = await getBrowser();
+    let page = await browser.newPage();
     let imagePath = "";
+    await mongoose.connect(process.env.DATABASE_URL!);
 
     try {
-        await mongoose.connect(process.env.DATABASE_URL!);
-
-        browser = await getBrowser();
-        page = await browser.newPage();
-
         // Load cookies from database
         const cookieDoc = await CookieModel.findOne({ type: "grok" });
         const cookies = cookieDoc ? JSON.parse(cookieDoc.cookies!) : [];
@@ -50,13 +46,8 @@ export async function generateVideo(imageBuffer: Buffer, prompt: string): Promis
             });
         });
 
-        const acookies = await page.cookies();
-        await CookieModel.findOneAndUpdate({ type: "grok" }, { type: "grok", cookies: JSON.stringify(acookies) }, { upsert: true });
-
         // Clean up temp file
         fs.unlinkSync(imagePath);
-
-        await browser.close();
 
         return videoSrc64;
     } catch (error) {
@@ -88,5 +79,10 @@ export async function generateVideo(imageBuffer: Buffer, prompt: string): Promis
             }
         }
         throw { error: error instanceof Error ? error.message : "Unknown error", screenshot };
+    } finally {
+        const acookies = await page.cookies();
+        await CookieModel.findOneAndUpdate({ type: "grok" }, { type: "grok", cookies: JSON.stringify(acookies) }, { upsert: true });
+
+        await browser.close();
     }
 }

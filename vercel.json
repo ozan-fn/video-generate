@@ -16,12 +16,8 @@
             "destination": "/src/server/server.ts"
         },
         {
-            "source": "/assets/(.*)",
-            "destination": "/dist/assets/$1"
-        },
-        {
-            "source": "/(.*)\\.(css|js|png|jpg|jpeg|svg|ico|json|woff|woff2)$",
-            "destination": "/dist/$1.$2"
+            "source": "/(.*)",
+            "destination": "/dist/$1"
         },
         {
             "source": "/(.*)",

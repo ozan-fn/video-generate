@@ -7,14 +7,11 @@ import path from "path";
 import os from "os";
 
 export async function generateImage(prompt: string, images: string[]): Promise<string | { error: string; screenshot: string }> {
-    let browser: any;
-    let page: any;
+    const browser = await getBrowser();
+    const page = await browser.newPage();
     const imagePaths: string[] = [];
 
     try {
-        browser = await getBrowser();
-        page = await browser.newPage();
-
         // Load cookies from database
         const cookieDoc = await CookieModel.findOne({ type: "google" });
         const cookies = cookieDoc ? JSON.parse(cookieDoc.cookies!) : [];
@@ -36,9 +33,13 @@ export async function generateImage(prompt: string, images: string[]): Promise<s
             console.log(`Saved image ${i} to ${filePath}, size: ${buffer.length}`);
         }
 
+        if (await page.$eval('mat-icon[fonticon="attach_file"]', (e) => !e.checkVisibility())) {
+            await page.click('text="Setuju"');
+        }
+
         const [fileChooser] = await Promise.all([page.waitForFileChooser(), page.click('mat-icon[fonticon="attach_file"]')]);
         console.log("Accepting files:", imagePaths);
-        await fileChooser.accept(imagePaths);
+        await fileChooser.accept([...imagePaths, "./example.png"]);
         console.log("Files accepted.");
 
         await page.type("rich-textarea", prompt);
@@ -64,16 +65,18 @@ export async function generateImage(prompt: string, images: string[]): Promise<s
             });
         });
 
-        const acookies = await page.cookies();
-        await CookieModel.findOneAndUpdate({ type: "google" }, { type: "google", cookies: JSON.stringify(acookies) }, { upsert: true });
-
         // Clean up temp files
         imagePaths.forEach(fs.unlinkSync);
 
+        const acookies = await page.cookies();
+        await CookieModel.findOneAndUpdate({ type: "google" }, { type: "google", cookies: JSON.stringify(acookies) }, { upsert: true });
         await browser.close();
 
         return base64;
     } catch (error) {
+        const acookies = await page.cookies();
+        await CookieModel.findOneAndUpdate({ type: "google" }, { type: "google", cookies: JSON.stringify(acookies) }, { upsert: true });
+
         console.error("Error:", error);
         // Clean up temp files on error
         imagePaths.forEach((filePath) => {
