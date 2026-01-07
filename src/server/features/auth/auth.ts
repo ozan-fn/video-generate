@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-router.post("/login", async (req: express.Request, res: express.Response) => {
+router.post("/login", async (req: any, res: any) => {
     const { username, password } = req.body;
 
     const envUsername = process.env.USERNAME;
@@ -27,7 +27,7 @@ router.post("/login", async (req: express.Request, res: express.Response) => {
     res.json({ token });
 });
 
-export const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+export const authenticateToken = (req: any, res: any, next: any) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
