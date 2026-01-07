@@ -1,10 +1,9 @@
 import express from "express";
-import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-router.post("/login", async (req: Request, res: Response) => {
+router.post("/login", async (req: express.Request, res: express.Response) => {
     const { username, password } = req.body;
 
     const envUsername = process.env.USERNAME;
@@ -28,7 +27,7 @@ router.post("/login", async (req: Request, res: Response) => {
     res.json({ token });
 });
 
-export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
+export const authenticateToken = (req: express.Request, res: express.Response, next: express.NextFunction) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
 
