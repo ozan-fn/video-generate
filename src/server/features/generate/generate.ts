@@ -35,7 +35,6 @@ export async function generateImage(prompt: string, images: string[]): Promise<s
 
         try {
             await page.click("text=Setuju");
-            await page.click('mat-icon[fonticon="add_2"]');
         } catch {}
 
         const [fileChooser] = await Promise.all([page.waitForFileChooser(), page.click('mat-icon[fonticon="attach_file"]')]);
