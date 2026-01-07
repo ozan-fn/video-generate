@@ -33,9 +33,10 @@ export async function generateImage(prompt: string, images: string[]): Promise<s
             console.log(`Saved image ${i} to ${filePath}, size: ${buffer.length}`);
         }
 
-        if (await page.$eval('mat-icon[fonticon="attach_file"]', (e) => !e.checkVisibility())) {
+        try {
             await page.click("text=Setuju");
-        }
+            await page.click('mat-icon[fonticon="add_2"]');
+        } catch {}
 
         const [fileChooser] = await Promise.all([page.waitForFileChooser(), page.click('mat-icon[fonticon="attach_file"]')]);
         console.log("Accepting files:", imagePaths);
