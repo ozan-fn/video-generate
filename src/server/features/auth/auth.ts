@@ -1,9 +1,10 @@
-import express, { Request, Response, NextFunction } from "express";
+import express from "express";
+import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
-router.post("/login", async (req, res) => {
+router.post("/login", async (req: Request, res: Response) => {
     const { username, password } = req.body;
 
     const envUsername = process.env.USERNAME;
