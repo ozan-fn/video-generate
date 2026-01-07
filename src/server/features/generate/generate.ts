@@ -39,7 +39,7 @@ export async function generateImage(prompt: string, images: string[]): Promise<s
 
         const [fileChooser] = await Promise.all([page.waitForFileChooser(), page.click('mat-icon[fonticon="attach_file"]')]);
         console.log("Accepting files:", imagePaths);
-        await fileChooser.accept([...imagePaths, "./example.png"]);
+        await fileChooser.accept([...imagePaths, path.join(__dirname, "../../../../example.png")]); // Adding a dummy file to test rejection
         console.log("Files accepted.");
 
         await page.type("rich-textarea", prompt);
