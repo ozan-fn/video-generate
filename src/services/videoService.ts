@@ -1,6 +1,7 @@
 import { newPage } from "../lib/browser";
 import path from "path";
 import fs from "fs-extra";
+import axios from "axios";
 
 export interface GenerateVideoOptions {
     prompt: string;
@@ -58,26 +59,21 @@ export class VideoService {
         );
     }
 
-    private async downloadVideoBuffer(page: Awaited<ReturnType<typeof newPage>>, videoSrc: string): Promise<Buffer> {
+    private async downloadVideoBuffer(videoSrc: string, cookieHeader?: string): Promise<Buffer> {
         if (videoSrc.startsWith("data:")) {
             const base64Data = videoSrc.split(",")[1];
             return Buffer.from(base64Data, "base64");
         }
+        if (videoSrc.startsWith("blob:")) {
+            throw new Error("Video src is blob URL and cannot be downloaded server-side");
+        }
+        const url = new URL(videoSrc);
+        const response = await axios.get<ArrayBuffer>(url.toString(), {
+            responseType: "arraybuffer",
+            headers: cookieHeader ? { Cookie: cookieHeader } : undefined,
+        });
 
-        const base64 = await page.evaluate(async (url: string) => {
-            const res = await fetch(url, { credentials: "include" });
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const buf = await res.arrayBuffer();
-            let binary = "";
-            const bytes = new Uint8Array(buf);
-            const len = bytes.byteLength;
-            for (let i = 0; i < len; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            return btoa(binary);
-        }, videoSrc);
-
-        return Buffer.from(base64, "base64");
+        return Buffer.from(response.data);
     }
 
     async generateFromImages(options: GenerateVideoOptions): Promise<GenerateVideoResult> {
@@ -117,7 +113,8 @@ export class VideoService {
                 throw new Error("Video src not found");
             }
 
-            const videoBuffer = await this.downloadVideoBuffer(page, videoSrc);
+            const cookieHeader = (await page.cookies()).map((c) => `${c.name}=${c.value}`).join("; ");
+            const videoBuffer = await this.downloadVideoBuffer(videoSrc, cookieHeader);
             const storageDir = path.join(process.cwd(), "storages");
             await fs.ensureDir(storageDir);
             const filename = `video-${Date.now()}.mp4`;
@@ -130,6 +127,11 @@ export class VideoService {
                 videoUrl,
                 images: images.map((img) => ({ name: img.name, size: img.size })),
             };
+        } catch (error) {
+            const screenshot = await page.screenshot({ encoding: "base64" });
+            const err = new Error(error instanceof Error ? error.message : "Video generation failed");
+            (err as Error & { screenshot?: string }).screenshot = screenshot;
+            throw err;
         } finally {
             await this.saveCookies(page);
             await page.close();
