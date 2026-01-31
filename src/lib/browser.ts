@@ -19,7 +19,7 @@ export async function getBrowser(): Promise<Browser> {
         
         args: process.platform === "linux"
             ? [
-                ...chromium.args,     // Tetap pakai args bawaan library biar optimasi server
+                // ...chromium.args,     // Tetap pakai args bawaan library biar optimasi server
                 "--no-sandbox",       // <--- WAJIB di Alpine (terutama user root)
                 // "--disable-gpu",      // Opsional: Membantu stabilitas
                 "--disable-dev-shm-usage" // Mencegah crash memory di container
