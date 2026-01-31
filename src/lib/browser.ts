@@ -36,6 +36,7 @@ export async function getBrowser(): Promise<Browser> {
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
                 "--disable-software-rasterizer",
+                "--use-gl=desktop",
                 "--disable-blink-features=AutomationControlled",
             ];
         } else {
