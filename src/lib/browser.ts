@@ -10,7 +10,6 @@ let browser: Browser | null = null;
 async function isAlpineLinux(): Promise<boolean> {
     try {
         const info = await osRelease();
-        console.log(info)
         return info.ID === "alpine";
     } catch {
         return false;
@@ -40,7 +39,7 @@ export async function getBrowser(): Promise<Browser> {
 
                 // === BAGIAN INI YANG DIUBAH UNTUK MAKSA GPU ===
                 '--use-gl=angle',
-                '--use-angle=gl-egl',
+                // '--use-angle=gl-egl',
                 // =============================================
 
                 "--disable-blink-features=AutomationControlled",
