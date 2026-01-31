@@ -39,12 +39,8 @@ export async function getBrowser(): Promise<Browser> {
                 "--disable-dev-shm-usage",
 
                 // === BAGIAN INI YANG DIUBAH UNTUK MAKSA GPU ===
-                "--enable-gpu",
-                "--use-gl=egl",             // Ganti 'desktop' ke 'egl' (lebih stabil buat headless)
-                "--ignore-gpu-blocklist",   // Paksa terima driver GPU apapun
-                "--enable-gpu-rasterization",
-                "--enable-zero-copy",
-                "--disable-software-rasterizer", // Paksa tolak rendering CPU
+                '--use-gl=angle',
+                '--use-angle=gl-egl',
                 // =============================================
 
                 "--disable-blink-features=AutomationControlled",
