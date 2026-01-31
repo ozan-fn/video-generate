@@ -3,33 +3,35 @@ import chromium from "@sparticuz/chromium";
 
 let browser: Browser | null = null;
 
-/**
- * Mengambil instance browser global.
- * Jika belum ada, browser akan dibuat dan disimpan secara singleton.
- */
 export async function getBrowser(): Promise<Browser> {
     if (browser) {
         return browser;
     }
 
     browser = await puppeteer.launch({
-        headless: process.platform === "linux",
+        // Di Alpine biasanya kita mau headless 'new' atau true
+        headless: process.platform === "linux" ? true : false, 
+        
         executablePath:
             process.platform === "linux"
-                ? await chromium.executablePath()
+                ? "/usr/bin/chromium-browser" // <--- UBAH BAGIAN INI (Hardcode path Alpine)
                 : "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
+        
         args: process.platform === "linux"
-            ? chromium.args
+            ? [
+                ...chromium.args,     // Tetap pakai args bawaan library biar optimasi server
+                "--no-sandbox",       // <--- WAJIB di Alpine (terutama user root)
+                // "--disable-gpu",      // Opsional: Membantu stabilitas
+                "--disable-dev-shm-usage" // Mencegah crash memory di container
+              ]
             : ["--disable-blink-features=AutomationControlled"],
+            
         userDataDir: "user_data",
     });
 
     return browser;
 }
 
-/**
- * Menutup browser global jika sedang aktif.
- */
 export async function closeBrowser(): Promise<void> {
     if (browser) {
         await browser.close();
@@ -37,10 +39,6 @@ export async function closeBrowser(): Promise<void> {
     }
 }
 
-/**
- * Helper untuk memastikan browser selalu tersedia
- * dan otomatis membuat page baru.
- */
 export async function newPage() {
     const br = await getBrowser();
     const page = await br.newPage();
