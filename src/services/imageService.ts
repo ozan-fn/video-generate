@@ -59,6 +59,9 @@ export class ImageService {
       await page.click("rich-textarea");
       await page.type("rich-textarea", options.prompt);
 
+      // Wait for spinner to be hidden (ready to submit)
+      await page.waitForSelector("mat-spinner", { hidden: true });
+
       // Submit (press Enter)
       await page.keyboard.press("Enter");
 
