@@ -1,6 +1,7 @@
 import { Page } from "puppeteer-core";
 import { getBrowser } from "../lib/browser";
 import path from "path";
+import fs from "fs-extra";
 
 export interface GenerateWithPromptOptions {
   image1Buffer: Buffer;
@@ -14,6 +15,37 @@ export interface GenerateWithPromptOptions {
  * Service untuk process gambar menggunakan Puppeteer
  */
 export class ImageService {
+  private cookiesPath = path.join(process.cwd(), "cookies", "gemini.json");
+
+  /**
+   * Load cookies from file
+   */
+  private async loadCookies(page: Page): Promise<void> {
+    try {
+      if (await fs.pathExists(this.cookiesPath)) {
+        const cookies = await fs.readJson(this.cookiesPath);
+        await page.setCookie(...cookies);
+        console.log("✅ Cookies loaded");
+      }
+    } catch (error) {
+      console.warn("⚠️ Failed to load cookies:", error);
+    }
+  }
+
+  /**
+   * Save cookies to file
+   */
+  private async saveCookies(page: Page): Promise<void> {
+    try {
+      const cookies = await page.cookies();
+      await fs.ensureDir(path.dirname(this.cookiesPath));
+      await fs.writeJson(this.cookiesPath, cookies, { spaces: 2 });
+      console.log("✅ Cookies saved");
+    } catch (error) {
+      console.warn("⚠️ Failed to save cookies:", error);
+    }
+  }
+
   /**
    * Paste image buffer ke element menggunakan DataTransfer
    */
@@ -43,6 +75,9 @@ export class ImageService {
     const page = await browser.newPage();
 
     try {
+      // Load cookies
+      await this.loadCookies(page);
+
       // Buka Gemini
       await page.goto("https://gemini.google.com/?hl=en", {
         waitUntil: "networkidle2",
@@ -51,9 +86,6 @@ export class ImageService {
 
       // Paste gambar pertama
       await this.pasteImageToElement(page, options.image1Buffer, options.image1Name, "rich-textarea");
-      try {
-        await page.click("text='Agree'");
-      } catch {}
 
       // Paste gambar kedua
       await this.pasteImageToElement(page, options.image2Buffer, options.image2Name, "rich-textarea");
@@ -71,6 +103,9 @@ export class ImageService {
       // Screenshot as buffer and return base64
       const screenshot = (await page.screenshot()) as Buffer;
       const base64 = screenshot.toString("base64");
+
+      // Save cookies
+      await this.saveCookies(page);
 
       await page.close();
 
