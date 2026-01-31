@@ -51,6 +51,9 @@ export class ImageService {
 
       // Paste gambar pertama
       await this.pasteImageToElement(page, options.image1Buffer, options.image1Name, "rich-textarea");
+      try {
+        await page.click("text='Agree'");
+      } catch {}
 
       // Paste gambar kedua
       await this.pasteImageToElement(page, options.image2Buffer, options.image2Name, "rich-textarea");
