@@ -1,24 +1,31 @@
 import { useState } from 'react';
 import MainLayout from '../components/layout/MainLayout';
 import { Button } from '../components/ui/button';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Loader2, CheckCircle } from 'lucide-react';
 import axios from 'axios';
+
+interface GenerateResponse {
+  message: string;
+  image: string;
+  images: Array<{ name: string; size: number }>;
+}
 
 const Home = () => {
   const [images, setImages] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [prompt, setPrompt] = useState('');
   const [loading, setLoading] = useState(false);
-  const [response, setResponse] = useState<any>(null);
+  const [response, setResponse] = useState<GenerateResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    const selectedFiles = Array.from(files).slice(0, 2); // Max 2 images
+    const selectedFiles = Array.from(files).slice(0, 2);
     setImages(selectedFiles);
+    setError(null);
 
-    // Create previews
     const previewUrls = selectedFiles.map((file) => URL.createObjectURL(file));
     setPreviews(previewUrls);
   };
@@ -32,14 +39,15 @@ const Home = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    setError(null);
+
     if (images.length !== 2) {
-      alert('Please select exactly 2 images');
+      setError('Please select exactly 2 images');
       return;
     }
 
     if (!prompt.trim()) {
-      alert('Please enter a prompt');
+      setError('Please enter a prompt');
       return;
     }
 
@@ -60,9 +68,13 @@ const Home = () => {
       });
 
       setResponse(result.data);
-    } catch (error: any) {
-      console.error('Error:', error);
-      alert(error.response?.data?.error || 'Failed to generate video');
+      setPrompt('');
+      setImages([]);
+      setPreviews([]);
+    } catch (err: any) {
+      const errorMsg = err.response?.data?.error || 'Failed to generate';
+      setError(errorMsg);
+      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
@@ -70,31 +82,36 @@ const Home = () => {
 
   return (
     <MainLayout>
-      <div className="p-6 md:p-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Generate Video</h1>
-          <p className="text-muted-foreground">
-            Upload 2 images and enter a prompt to generate your video.
-          </p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 p-6 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-12 text-center">
+            <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Generate Video with AI
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Upload 2 images and describe your vision. Our AI will create a video based on your prompt.
+            </p>
+          </div>
 
-        <div className="max-w-3xl mx-auto">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Image Upload */}
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="text-xl font-semibold mb-4">Upload Images</h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Select exactly 2 images (JPG, PNG, GIF, or WebP)
-              </p>
+          {/* Main Content */}
+          {!response ? (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Image Upload Card */}
+              <div className="rounded-xl border border-border bg-card shadow-lg p-8">
+                <h2 className="text-2xl font-bold mb-2">Upload Images</h2>
+                <p className="text-muted-foreground mb-6">
+                  Select exactly 2 images (JPG, PNG, GIF, or WebP)
+                </p>
 
-              <div className="space-y-4">
-                {/* Upload Button */}
-                <label className="flex items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors">
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload className="h-8 w-8 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      Click to upload images
-                    </span>
+                {/* Upload Area */}
+                <label className="flex flex-col items-center justify-center w-full p-12 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-accent/50 transition-all duration-200 hover:border-primary">
+                  <div className="flex flex-col items-center gap-3">
+                    <Upload className="h-12 w-12 text-muted-foreground" />
+                    <div className="text-center">
+                      <p className="font-semibold text-foreground">Click to upload images</p>
+                      <p className="text-sm text-muted-foreground mt-1">or drag and drop</p>
+                    </div>
                   </div>
                   <input
                     type="file"
@@ -108,61 +125,140 @@ const Home = () => {
 
                 {/* Image Previews */}
                 {previews.length > 0 && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="mt-6 grid grid-cols-2 gap-4">
                     {previews.map((preview, index) => (
-                      <div key={index} className="relative">
+                      <div key={index} className="relative group">
                         <img
                           src={preview}
                           alt={`Preview ${index + 1}`}
-                          className="w-full h-48 object-cover rounded-lg"
+                          className="w-full h-56 object-cover rounded-lg shadow-md group-hover:shadow-lg transition-shadow"
                         />
-                        <Button
-                          type="button"
-                          size="icon"
-                          variant="destructive"
-                          className="absolute top-2 right-2"
-                          onClick={() => removeImage(index)}
-                          disabled={loading}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => removeImage(index)}
+                            disabled={loading}
+                            className="rounded-lg"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                        <div className="absolute bottom-2 left-2">
+                          <span className="bg-black/60 text-white text-xs px-2 py-1 rounded">
+                            Image {index + 1}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* Prompt Input */}
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="text-xl font-semibold mb-4">Prompt</h2>
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="Describe what you want to create..."
-                className="w-full min-h-32 px-3 py-2 rounded-md border border-border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                disabled={loading}
-              />
-            </div>
+              {/* Prompt Card */}
+              <div className="rounded-xl border border-border bg-card shadow-lg p-8">
+                <h2 className="text-2xl font-bold mb-2">Your Prompt</h2>
+                <p className="text-muted-foreground mb-4">
+                  Describe what video you want to create
+                </p>
+                <textarea
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  placeholder="Example: A magical forest with glowing trees transforming into a night sky..."
+                  className="w-full min-h-40 px-4 py-3 rounded-lg border border-border bg-background resize-none focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                  disabled={loading}
+                />
+              </div>
 
-            {/* Submit Button */}
-            <Button
-              type="submit"
-              className="w-full"
-              size="lg"
-              disabled={loading || images.length !== 2 || !prompt.trim()}
-            >
-              {loading ? 'Generating...' : 'Generate Video'}
-            </Button>
-          </form>
+              {/* Error Message */}
+              {error && (
+                <div className="rounded-lg border border-red-200 bg-red-50 dark:bg-red-950 p-4 text-red-800 dark:text-red-200">
+                  {error}
+                </div>
+              )}
 
-          {/* Response Display */}
-          {response && (
-            <div className="mt-6 rounded-lg border border-border bg-card p-6">
-              <h2 className="text-xl font-semibold mb-4">Response</h2>
-              <pre className="text-sm bg-muted p-4 rounded-md overflow-auto">
-                {JSON.stringify(response, null, 2)}
-              </pre>
+              {/* Submit Button */}
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full h-12 text-lg font-semibold rounded-lg transition-all"
+                disabled={loading || images.length !== 2 || !prompt.trim()}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                    Generating Video...
+                  </>
+                ) : (
+                  'Generate Video'
+                )}
+              </Button>
+            </form>
+          ) : (
+            // Success Response
+            <div className="space-y-6 animate-in fade-in duration-500">
+              {/* Success Message */}
+              <div className="rounded-xl border border-green-200 bg-green-50 dark:bg-green-950 p-6 flex items-center gap-3">
+                <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400 flex-shrink-0" />
+                <div>
+                  <h3 className="font-bold text-green-900 dark:text-green-100">Success!</h3>
+                  <p className="text-sm text-green-800 dark:text-green-200">Your video has been generated</p>
+                </div>
+              </div>
+
+              {/* Generated Image */}
+              <div className="rounded-xl border border-border bg-card shadow-lg overflow-hidden">
+                <div className="p-6 border-b border-border bg-muted/50">
+                  <h2 className="text-2xl font-bold">Generated Video Frame</h2>
+                </div>
+                <img
+                  src={response.image}
+                  alt="Generated result"
+                  className="w-full h-auto"
+                />
+              </div>
+
+              {/* Info Card */}
+              <div className="rounded-xl border border-border bg-card shadow-lg p-6">
+                <h3 className="font-bold mb-3">Details</h3>
+                <div className="space-y-2 text-sm">
+                  <p><span className="font-semibold">Status:</span> {response.message}</p>
+                  <p><span className="font-semibold">Images Processed:</span> {response.images.length}</p>
+                  {response.images.map((img, idx) => (
+                    <p key={idx} className="text-muted-foreground">
+                      • {img.name} ({(img.size / 1024).toFixed(2)} KB)
+                    </p>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => {
+                    setResponse(null);
+                    setError(null);
+                  }}
+                  size="lg"
+                  className="flex-1 rounded-lg"
+                >
+                  Generate Another
+                </Button>
+                <Button
+                  onClick={() => {
+                    const link = document.createElement('a');
+                    link.href = response.image;
+                    link.download = `video-frame-${Date.now()}.png`;
+                    link.click();
+                  }}
+                  variant="outline"
+                  size="lg"
+                  className="flex-1 rounded-lg"
+                >
+                  Download Image
+                </Button>
+              </div>
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { GenerateResponse } from "../models/generate";
+import { imageService } from "../services/imageService";
 
 export const getHealth = (req: Request, res: Response) => {
   res.json({ status: "ok" });
@@ -9,7 +9,7 @@ export const getInfo = (req: Request, res: Response) => {
   res.json({ message: "Video Generate API Server" });
 };
 
-export const generateVideo = (req: Request, res: Response) => {
+export const generateVideo = async (req: Request, res: Response) => {
   try {
     const { prompt } = req.body;
     const files = req.files as Express.Multer.File[];
@@ -27,19 +27,23 @@ export const generateVideo = (req: Request, res: Response) => {
       });
     }
 
-    // Response
-    const response: GenerateResponse = {
-      message: "Generate request received",
+    // Process with Gemini
+    const base64 = await imageService.processWithGemini({
+      image1Buffer: files[0].buffer,
+      image2Buffer: files[1].buffer,
+      image1Name: files[0].originalname,
+      image2Name: files[1].originalname,
       prompt,
-      images: files.map((file) => ({
-        filename: file.filename,
-        originalName: file.originalname,
-        size: file.size,
-        path: file.path,
-      })),
-    };
+    });
 
-    res.json(response);
+    res.json({
+      message: "Video generated successfully",
+      image: `data:image/png;base64,${base64}`,
+      images: files.map((f) => ({
+        name: f.originalname,
+        size: f.size,
+      })),
+    });
   } catch (error) {
     res.status(500).json({
       error: error instanceof Error ? error.message : "Unknown error",
