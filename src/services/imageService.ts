@@ -16,6 +16,9 @@ export interface GenerateWithPromptOptions {
  */
 export class ImageService {
   private cookiesPath = path.join(process.cwd(), "cookies", "gemini.json");
+  private readonly richTextarea = "rich-textarea";
+  private readonly sendIconSelector = "mat-icon[fonticon='send']";
+  private readonly responseImageSelector = "model-response img";
 
   /**
    * Load cookies from file
@@ -68,6 +71,50 @@ export class ImageService {
   }
 
   /**
+   * Wait until a response image is available and return the latest src
+   */
+  private async getLatestResponseImageSrc(page: Page): Promise<string | null> {
+    await page.waitForFunction(
+      (sel: string) => {
+        const images = Array.from(document.querySelectorAll(sel));
+        return images.some((img) => !!img.getAttribute("src"));
+      },
+      { timeout: 120000 },
+      this.responseImageSelector,
+    );
+
+    return page.evaluate((sel: string) => {
+      const images = Array.from(document.querySelectorAll(sel)) as HTMLImageElement[];
+      const lastWithSrc = images.reverse().find((img) => !!img.getAttribute("src"));
+      return lastWithSrc?.getAttribute("src") || null;
+    }, this.responseImageSelector);
+  }
+
+  /**
+   * Download image buffer from src without leaving the page
+   */
+  private async downloadImageBuffer(page: Page, imgSrc: string): Promise<Buffer> {
+    if (imgSrc.startsWith("data:")) {
+      const base64Data = imgSrc.split(",")[1];
+      return Buffer.from(base64Data, "base64");
+    }
+
+    const base64 = await page.evaluate(async (url: string) => {
+      const res = await fetch(url, { credentials: "include" });
+      const buf = await res.arrayBuffer();
+      let binary = "";
+      const bytes = new Uint8Array(buf);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      return btoa(binary);
+    }, imgSrc);
+
+    return Buffer.from(base64, "base64");
+  }
+
+  /**
    * Process 2 images dengan Gemini
    */
   async processWithGemini(options: GenerateWithPromptOptions): Promise<string> {
@@ -85,13 +132,13 @@ export class ImageService {
       });
 
       // Paste gambar pertama
-      await this.pasteImageToElement(page, options.image1Buffer, options.image1Name, "rich-textarea");
+      await this.pasteImageToElement(page, options.image1Buffer, options.image1Name, this.richTextarea);
 
       // Paste gambar kedua
-      await this.pasteImageToElement(page, options.image2Buffer, options.image2Name, "rich-textarea");
+      await this.pasteImageToElement(page, options.image2Buffer, options.image2Name, this.richTextarea);
 
       // Type prompt
-      await page.click("rich-textarea");
+      await page.click(this.richTextarea);
       await page.type("rich-textarea", options.prompt);
 
       // Wait for spinner to be hidden (ready to submit)
@@ -100,19 +147,26 @@ export class ImageService {
       // Submit (press Enter)
       await page.keyboard.press("Enter");
 
-      // Screenshot as buffer and return base64
-      const screenshot = (await page.screenshot()) as Buffer;
-      const base64 = screenshot.toString("base64");
+      // Wait for send button to be visible again (response ready)
+      await page.waitForSelector(this.sendIconSelector, { visible: true, timeout: 120000 });
+
+      const imgSrc = await this.getLatestResponseImageSrc(page);
+
+      if (!imgSrc) {
+        throw new Error("No image found in Gemini response");
+      }
+
+      const imageBuffer = await this.downloadImageBuffer(page, imgSrc);
+      const base64 = imageBuffer.toString("base64");
 
       // Save cookies
       await this.saveCookies(page);
 
-      await page.close();
-
       return base64;
     } catch (error) {
-      await page.close();
       throw error;
+    } finally {
+      await page.close();
     }
   }
 }
