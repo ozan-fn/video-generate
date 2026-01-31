@@ -13,6 +13,9 @@ const PORT = process.env.PORT || 3001;
 app.use(compression({ level: 6 }));
 app.use(express.json());
 
+const storagePath = path.join(process.cwd(), "storages");
+app.use("/storages", express.static(storagePath));
+
 app.use("/api", apiRoutes);
 
 const distPath = path.join(__dirname, "../client/dist");

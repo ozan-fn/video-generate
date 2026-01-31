@@ -25,8 +25,8 @@ export const generateVideo = async (req: Request, res: Response) => {
 
         res.json({
             message: "Video generated successfully",
-            image: `data:image/png;base64`,
-            images: "result.images",
+            videoUrl: result.videoUrl,
+            images: result.images,
         });
     } catch (error) {
         const err = error as Error & { screenshot?: string };
