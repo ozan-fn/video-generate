@@ -31,15 +31,34 @@ export async function getBrowser(): Promise<Browser> {
     if (process.platform === "linux") {
         if (await isAlpineLinux()) {
             executablePath = "/usr/bin/chromium-browser";
-            args = ["--disable-blink-features=AutomationControlled"];
+            args = [
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-software-rasterizer",
+                "--disable-blink-features=AutomationControlled",
+            ];
         } else {
             executablePath = await chromium.executablePath();
-            args = [...chromium.args, "--disable-blink-features=AutomationControlled"];
+            args = [
+                ...chromium.args,
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-software-rasterizer",
+                "--disable-blink-features=AutomationControlled",
+            ];
         }
     } else {
         executablePath =
             "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
-        args = ["--disable-blink-features=AutomationControlled"];
+        args = [
+            "--no-sandbox",
+            "--disable-setuid-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-software-rasterizer",
+            "--disable-blink-features=AutomationControlled",
+        ];
     }
 
     browser = await puppeteer.launch({
