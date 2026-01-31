@@ -10,6 +10,7 @@ let browser: Browser | null = null;
 async function isAlpineLinux(): Promise<boolean> {
     try {
         const info = await osRelease();
+        console.log(info)
         return info.ID === "alpine";
     } catch {
         return false;
