@@ -76,7 +76,7 @@ export class ImageService {
 
     try {
       // Load cookies
-      //   await this.loadCookies(page);
+      await this.loadCookies(page);
 
       // Buka Gemini
       await page.goto("https://gemini.google.com/?hl=en", {
