@@ -32,11 +32,20 @@ export async function getBrowser(): Promise<Browser> {
         if (await isAlpineLinux()) {
             executablePath = "/usr/bin/chromium-browser";
             args = [
+                // Flag Wajib Alpine/Root
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
-                "--disable-software-rasterizer",
-                "--use-gl=egl",
+
+                // === BAGIAN INI YANG DIUBAH UNTUK MAKSA GPU ===
+                "--enable-gpu",
+                "--use-gl=egl",             // Ganti 'desktop' ke 'egl' (lebih stabil buat headless)
+                "--ignore-gpu-blocklist",   // Paksa terima driver GPU apapun
+                "--enable-gpu-rasterization",
+                "--enable-zero-copy",
+                "--disable-software-rasterizer", // Paksa tolak rendering CPU
+                // =============================================
+
                 "--disable-blink-features=AutomationControlled",
             ];
         } else {
