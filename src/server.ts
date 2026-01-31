@@ -1,25 +1,37 @@
 import express, { Express } from "express";
 import path from "path";
 import compression from "compression";
+import { createServer } from "http";
+import { Server } from "socket.io";
 import apiRoutes from "./routes/api";
+import registerSocketHandlers from "./socket";
 
 const app: Express = express();
+const httpServer = createServer(app);
 const PORT = process.env.PORT || 3001;
 
-// Middleware
 app.use(compression({ level: 6 }));
 app.use(express.json());
 
-// API Routes
 app.use("/api", apiRoutes);
 
-// Serve static files from client/dist
 const distPath = path.join(__dirname, "../client/dist");
 app.use(express.static(distPath));
 
-// SPA fallback - serve index.html for all non-API routes
-app.get(/^(?!\/api\/)/, (_req, res) => {
-  res.sendFile(path.join(distPath, "index.html"));
+app.use((_req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
 });
 
-export default app;
+const io = new Server(httpServer, {
+    cors: {
+        origin: "*",
+    },
+});
+
+registerSocketHandlers(io);
+
+httpServer.listen(PORT, () => {
+    console.log(`Server is running at http://localhost:${PORT}`);
+});
+
+export { httpServer, io, app };

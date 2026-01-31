@@ -3,6 +3,7 @@ import {
   Home,
   Settings,
   LogOut,
+  LogIn,
   X,
 } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -18,6 +19,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const menuItems = [
     { icon: Home, label: 'Home', href: '/' },
     { icon: Settings, label: 'Settings', href: '/settings' },
+    { icon: LogIn, label: 'Login', href: '/login' },
   ];
 
   return (
