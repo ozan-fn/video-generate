@@ -1,11 +1,7 @@
-import { getBrowser } from "./lib/browser";
-import "./server"; // Start Express server
+import app from "./server";
 
-// Original main function
-async function main() {
-  const browser = await getBrowser();
-  const page = await browser.newPage();
-  await page.goto("chrome://gpu");
-  await page.screenshot({ path: "gpu_debug.png", fullPage: true });
-  browser.close();
-}
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, () => {
+  console.log(`Server is running at http://localhost:${PORT}`);
+});

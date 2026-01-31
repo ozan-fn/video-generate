@@ -22,9 +22,4 @@ app.get(/^(?!\/api\/)/, (_req, res) => {
   res.sendFile(path.join(distPath, "index.html"));
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
-});
-
 export default app;

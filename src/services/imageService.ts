@@ -99,19 +99,33 @@ export class ImageService {
       return Buffer.from(base64Data, "base64");
     }
 
-    const base64 = await page.evaluate(async (url: string) => {
-      const res = await fetch(url, { credentials: "include" });
-      const buf = await res.arrayBuffer();
-      let binary = "";
-      const bytes = new Uint8Array(buf);
-      const len = bytes.byteLength;
-      for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-      }
-      return btoa(binary);
-    }, imgSrc);
+    try {
+      const base64 = await page.evaluate(async (url: string) => {
+        const res = await fetch(url, { credentials: "include" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const buf = await res.arrayBuffer();
+        let binary = "";
+        const bytes = new Uint8Array(buf);
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        return btoa(binary);
+      }, imgSrc);
 
-    return Buffer.from(base64, "base64");
+      return Buffer.from(base64, "base64");
+    } catch {
+      const fetchPage = await page.browser().newPage();
+      try {
+        const response = await fetchPage.goto(imgSrc, { waitUntil: "networkidle2", timeout: 60000 });
+        if (!response) {
+          throw new Error("Failed to fetch image");
+        }
+        return await response.buffer();
+      } finally {
+        await fetchPage.close();
+      }
+    }
   }
 
   /**
@@ -159,13 +173,12 @@ export class ImageService {
       const imageBuffer = await this.downloadImageBuffer(page, imgSrc);
       const base64 = imageBuffer.toString("base64");
 
-      // Save cookies
-      await this.saveCookies(page);
-
       return base64;
     } catch (error) {
       throw error;
     } finally {
+      // Save cookies even on error
+      await this.saveCookies(page);
       await page.close();
     }
   }

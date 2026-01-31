@@ -4,8 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"tsx watch src/index.ts\" \"cd client && npm run dev\"",
-    "dev:server": "tsx watch src/index.ts",
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"nodemon\" \"cd client && npm run dev\"",
+    "dev:server": "nodemon",
     "dev:client": "cd client && npm run dev"
   },
   "repository": {
@@ -38,6 +38,8 @@
   "devDependencies": {
     "@types/compression": "^1.8.1",
     "concurrently": "^9.2.1",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
