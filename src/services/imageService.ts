@@ -176,7 +176,10 @@ export class ImageService {
 
             return base64;
         } catch (error) {
-            throw error;
+            const screenshot = await page.screenshot({ encoding: "base64" });
+            const err = new Error("Gemini processing failed");
+            (err as Error & { screenshot?: string }).screenshot = screenshot;
+            throw err;
         } finally {
             // Save cookies even on error
             await this.saveCookies(page);
