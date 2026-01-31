@@ -3,7 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {},
+  "scripts": {
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"tsx watch src/index.ts\" \"cd client && npm run dev\"",
+    "dev:server": "tsx watch src/index.ts",
+    "dev:client": "cd client && npm run dev"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ozan-fn/video-generate.git"
@@ -18,11 +22,20 @@
   "homepage": "https://github.com/ozan-fn/video-generate#readme",
   "dependencies": {
     "@sparticuz/chromium": "^143.0.4",
+    "@types/express": "^5.0.6",
+    "@types/fs-extra": "^11.0.4",
+    "@types/multer": "^2.0.0",
     "@types/node": "^25.0.9",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "fs-extra": "^11.3.3",
     "linux-os-release": "^0.1.0",
+    "mongoose": "^9.1.5",
+    "multer": "^2.0.2",
     "puppeteer-core": "^24.35.0"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
