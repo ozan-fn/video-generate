@@ -1,12 +1,4 @@
-user_data/*
-!user_data/Default
-user_data/Default/*
-!user_data/Default/Cookies*
-!user_data/Default/Network/
-!user_data/Default/Local\ Storage/
-!user_data/Default/Session\ Storage/
-!user_data/Default/IndexedDB/
-!user_data/Default/blob_storage/
+user_data
 
 # Logs
 logs
