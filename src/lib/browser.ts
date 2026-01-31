@@ -39,7 +39,8 @@ export async function getBrowser(): Promise<Browser> {
 
                 // === BAGIAN INI YANG DIUBAH UNTUK MAKSA GPU ===
                 '--use-gl=angle',
-                // '--use-angle=gl-egl',
+                '--use-angle=gl-egl',
+                '--use-cmd-decoder=passthrough',
                 // =============================================
 
                 "--disable-blink-features=AutomationControlled",
