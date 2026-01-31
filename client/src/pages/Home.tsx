@@ -23,7 +23,7 @@ const Home = () => {
         const files = e.target.files;
         if (!files) return;
 
-        const selectedFiles = Array.from(files).slice(0, 2);
+        const selectedFiles = Array.from(files).slice(0, 5);
         setImages(selectedFiles);
         setError(null);
         setErrorScreenshot(null);
@@ -44,8 +44,8 @@ const Home = () => {
         setError(null);
         setErrorScreenshot(null);
 
-        if (images.length !== 2) {
-            setError("Please select exactly 2 images");
+        if (images.length < 1 || images.length > 5) {
+            setError("Please select between 1 and 5 images");
             return;
         }
 
@@ -100,7 +100,7 @@ const Home = () => {
                             {/* Image Upload Card */}
                             <div className="rounded-xl border border-border bg-card shadow-lg p-8">
                                 <h2 className="text-2xl font-bold mb-2">Upload Images</h2>
-                                <p className="text-muted-foreground mb-6">Select exactly 2 images (JPG, PNG, GIF, or WebP)</p>
+                                <p className="text-muted-foreground mb-6">Select between 1 and 5 images (JPG, PNG, GIF, or WebP)</p>
 
                                 {/* Upload Area */}
                                 <label className="flex flex-col items-center justify-center w-full p-12 border-2 border-dashed border-border rounded-xl cursor-pointer hover:bg-accent/50 transition-all duration-200 hover:border-primary">
@@ -116,7 +116,7 @@ const Home = () => {
 
                                 {/* Image Previews */}
                                 {previews.length > 0 && (
-                                    <div className="mt-6 grid grid-cols-2 gap-4">
+                                    <div className="mt-6 grid grid-cols-2 md:grid-cols-3 gap-4">
                                         {previews.map((preview, index) => (
                                             <div key={index} className="relative group">
                                                 <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-56 object-cover rounded-lg shadow-md group-hover:shadow-lg transition-shadow" />
@@ -154,7 +154,7 @@ const Home = () => {
                             )}
 
                             {/* Submit Button */}
-                            <Button type="submit" size="lg" className="w-full h-12 text-lg font-semibold rounded-lg transition-all" disabled={loading || images.length !== 2 || !prompt.trim()}>
+                            <Button type="submit" size="lg" className="w-full h-12 text-lg font-semibold rounded-lg transition-all" disabled={loading || images.length < 1 || images.length > 5 || !prompt.trim()}>
                                 {loading ? (
                                     <>
                                         <Loader2 className="h-5 w-5 mr-2 animate-spin" />
