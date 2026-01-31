@@ -1,37 +1,60 @@
 import puppeteer, { Browser } from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
+import osRelease from "linux-os-release";
 
 let browser: Browser | null = null;
 
+/**
+ * Mengecek apakah sistem adalah Alpine Linux.
+ */
+async function isAlpineLinux(): Promise<boolean> {
+    try {
+        const info = await osRelease();
+        return info.ID === "alpine";
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Mengambil instance browser global.
+ * Jika belum ada, browser akan dibuat dan disimpan secara singleton.
+ */
 export async function getBrowser(): Promise<Browser> {
     if (browser) {
         return browser;
     }
 
+    let executablePath: string;
+    let args: string[];
+
+    if (process.platform === "linux") {
+        if (await isAlpineLinux()) {
+            executablePath = "/usr/bin/chromium-browser";
+            args = ["--disable-blink-features=AutomationControlled"];
+        } else {
+            executablePath = await chromium.executablePath();
+            args = [...chromium.args, "--disable-blink-features=AutomationControlled"];
+        }
+    } else {
+        executablePath =
+            "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
+        args = ["--disable-blink-features=AutomationControlled"];
+    }
+
     browser = await puppeteer.launch({
-        // Di Alpine biasanya kita mau headless 'new' atau true
-        headless: process.platform === "linux" ? true : false, 
-        
-        executablePath:
-            process.platform === "linux"
-                ? "/usr/bin/chromium-browser" // <--- UBAH BAGIAN INI (Hardcode path Alpine)
-                : "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe",
-        
-        args: process.platform === "linux"
-            ? [
-                // ...chromium.args,     // Tetap pakai args bawaan library biar optimasi server
-                "--no-sandbox",       // <--- WAJIB di Alpine (terutama user root)
-                // "--disable-gpu",      // Opsional: Membantu stabilitas
-                "--disable-dev-shm-usage" // Mencegah crash memory di container
-              ]
-            : ["--disable-blink-features=AutomationControlled"],
-            
+        headless: process.platform === "linux",
+        executablePath,
+        args,
         userDataDir: "user_data",
     });
 
     return browser;
 }
 
+/**
+ * Menutup browser global jika sedang aktif.
+ */
 export async function closeBrowser(): Promise<void> {
     if (browser) {
         await browser.close();
@@ -39,6 +62,10 @@ export async function closeBrowser(): Promise<void> {
     }
 }
 
+/**
+ * Helper untuk memastikan browser selalu tersedia
+ * dan otomatis membuat page baru.
+ */
 export async function newPage() {
     const br = await getBrowser();
     const page = await br.newPage();

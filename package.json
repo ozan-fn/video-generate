@@ -19,6 +19,7 @@
   "dependencies": {
     "@sparticuz/chromium": "^143.0.4",
     "@types/node": "^25.0.9",
+    "linux-os-release": "^0.1.0",
     "puppeteer-core": "^24.35.0"
   },
   "devDependencies": {
