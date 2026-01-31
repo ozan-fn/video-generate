@@ -26,13 +26,55 @@ export const generateVideo = async (req: Request, res: Response) => {
         res.json({
             message: "Video generated successfully",
             videoUrl: result.videoUrl,
+            urlHistory: result.urlHistory,
             images: result.images,
         });
     } catch (error) {
         const err = error as Error & { screenshot?: string };
         if (err?.screenshot) {
             return res.status(500).json({
-                error: err.message || "Gemini processing failed",
+                error: err.message || "Video generation failed",
+                screenshot: `data:image/png;base64,${err.screenshot}`,
+            });
+        }
+
+        res.status(500).json({
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
+    }
+};
+
+export const generateVideoWithPreviousFrame = async (req: Request, res: Response) => {
+    try {
+        const { prompt, urlHistory } = req.body;
+
+        if (!prompt) {
+            return res.status(400).json({
+                error: "Prompt is required",
+            });
+        }
+
+        if (!urlHistory) {
+            return res.status(400).json({
+                error: "Previous video URL is required",
+            });
+        }
+
+        const result = await videoService.generateFromVideoAndPrompt({
+            prompt,
+            urlHistory,
+        });
+
+        res.json({
+            message: "Video generated successfully",
+            videoUrl: result.videoUrl,
+            urlHistory: result.urlHistory,
+        });
+    } catch (error) {
+        const err = error as Error & { screenshot?: string };
+        if (err?.screenshot) {
+            return res.status(500).json({
+                error: err.message || "Video generation failed",
                 screenshot: `data:image/png;base64,${err.screenshot}`,
             });
         }
