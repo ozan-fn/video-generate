@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import MainLayout from "../components/layout/MainLayout";
 import { Button } from "../components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "../components/ui/alert";
 import { Loader2, CheckCircle, AlertCircle, Chrome } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 
@@ -96,24 +97,23 @@ const Login = () => {
 
     return (
         <MainLayout>
-            <div className="flex items-center justify-center min-h-screen px-4">
-                <div className="max-w-7xl w-full">
+            <div className="container flex items-center justify-center min-h-[80vh]">
+                <div className="w-full max-w-md space-y-6">
                     {screenshot && (
-                        <div className="mb-6 flex justify-center">
-                            <img src={`data:image/webp;base64,${screenshot}`} alt="Gemini Screenshot" className="border border-border rounded-md shadow-md max-h-96" />
+                        <div className="flex justify-center">
+                            <img src={`data:image/webp;base64,${screenshot}`} alt="Gemini Screenshot" className="border rounded-md shadow-md max-h-96" />
                         </div>
                     )}
-                </div>
-                <div className="w-full max-w-md">
-                    <div className="bg-card border border-border rounded-lg shadow-lg p-8">
+
+                    <div className="bg-card border rounded-lg shadow-lg p-6">
                         <div className="flex justify-center mb-6">
-                            <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-4 rounded-full">
-                                <Chrome className="h-8 w-8 text-white" />
+                            <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-full">
+                                <Chrome className="h-6 w-6 text-white" />
                             </div>
                         </div>
 
-                        <h1 className="text-3xl font-bold mb-2 text-center">Login Check</h1>
-                        <p className="text-muted-foreground text-center mb-8">Check your Gemini login status</p>
+                        <h1 className="text-2xl font-bold text-center mb-1">Login Check</h1>
+                        <p className="text-muted-foreground text-center text-sm mb-6">Check your Gemini login status</p>
 
                         <div className="space-y-4">
                             {/* Socket Status */}
@@ -122,60 +122,64 @@ const Login = () => {
                                 <span className="text-xs opacity-75">{socketId ? `ID: ${socketId}` : "No ID"}</span>
                             </div>
                             {/* Gemini Check Button */}
-                            <Button onClick={handleCheckGeminiLogin} disabled={loading} className="w-full h-12 text-base font-medium">
+                            <Button onClick={handleCheckGeminiLogin} disabled={loading} className="w-full">
                                 {loading ? (
                                     <>
-                                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         Checking Gemini Login...
                                     </>
                                 ) : (
                                     <>
-                                        <Chrome className="mr-2 h-5 w-5" />
+                                        <Chrome className="mr-2 h-4 w-4" />
                                         Check Gemini Login
                                     </>
                                 )}
                             </Button>
 
                             {/* Gemini Login Button */}
-                            <Button variant="outline" onClick={() => handleLogin()} className="w-full h-12 text-base font-medium">
-                                <Chrome className="mr-2 h-5 w-5" />
+                            <Button variant="outline" onClick={() => handleLogin()} className="w-full">
+                                <Chrome className="mr-2 h-4 w-4" />
                                 Login Gemini (Open Tab)
                             </Button>
 
                             {/* Error Message */}
                             {error && (
-                                <div className="flex items-start gap-3 p-4 bg-destructive/10 border border-destructive/20 rounded-md text-destructive text-sm">
-                                    <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
-                                    <div>
-                                        <p className="font-medium">Login Check Failed</p>
-                                        <p className="mt-1 text-xs">{error}</p>
-                                    </div>
-                                </div>
+                                <Alert variant="destructive">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>Login Check Failed</AlertTitle>
+                                    <AlertDescription>{error}</AlertDescription>
+                                </Alert>
                             )}
 
                             {/* Status Message */}
-                            {loginStatus && (
-                                <div className={`flex items-start gap-3 p-4 rounded-md text-sm ${loginStatus.isLoggedIn ? "bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400" : "bg-yellow-500/10 border border-yellow-500/20 text-yellow-700 dark:text-yellow-400"}`}>
-                                    {loginStatus.isLoggedIn ? <CheckCircle className="h-5 w-5 flex-shrink-0 mt-0.5" /> : <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />}
-                                    <div>
-                                        <p className="font-medium">{loginStatus.message}</p>
-                                        <p className="text-xs mt-1 opacity-75">{loginStatus.isLoggedIn ? "Your Gemini session is active" : "Please login to Gemini first"}</p>
-                                    </div>
-                                </div>
+                            {loginStatus && loginStatus.isLoggedIn && (
+                                <Alert>
+                                    <CheckCircle className="h-4 w-4" />
+                                    <AlertTitle>{loginStatus.message}</AlertTitle>
+                                    <AlertDescription>Your Gemini session is active</AlertDescription>
+                                </Alert>
+                            )}
+
+                            {loginStatus && !loginStatus.isLoggedIn && (
+                                <Alert variant="destructive">
+                                    <AlertCircle className="h-4 w-4" />
+                                    <AlertTitle>{loginStatus.message}</AlertTitle>
+                                    <AlertDescription>Please login to Gemini first</AlertDescription>
+                                </Alert>
                             )}
                         </div>
 
                         {/* Info Box */}
-                        <div className="mt-8 p-4 bg-muted rounded-lg">
+                        <div className="mt-6 p-4 bg-muted rounded-lg">
                             <p className="text-sm font-medium mb-2">How it works:</p>
-                            <ul className="text-xs text-muted-foreground space-y-1">
-                                <li>✓ Opens Gemini in the background</li>
-                                <li>✓ Checks for login profile element</li>
-                                <li>✓ Returns your login status</li>
+                            <ul className="text-sm text-muted-foreground space-y-1">
+                                <li>• Opens Gemini in the background</li>
+                                <li>• Checks for login profile element</li>
+                                <li>• Returns your login status</li>
                             </ul>
                         </div>
 
-                        <p className="text-center text-muted-foreground text-xs mt-6">Make sure you are logged into Google/Gemini in your browser</p>
+                        <p className="text-center text-muted-foreground text-xs mt-4">Make sure you are logged into Google/Gemini in your browser</p>
                     </div>
                 </div>
             </div>
