@@ -52,7 +52,7 @@ export async function getBrowser(): Promise<Browser> {
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
-                "--disable-software-rasterizer",
+                // "--disable-software-rasterizer",
                 "--disable-blink-features=AutomationControlled",
             ];
         }
