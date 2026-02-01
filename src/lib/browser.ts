@@ -1,8 +1,14 @@
-import puppeteer, { Browser } from "puppeteer-core";
+// Ganti import puppeteer-core menjadi puppeteer-extra
+import puppeteer from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import { Browser } from "puppeteer-core"; // Tetap ambil tipe data Browser
 import chromium from "@sparticuz/chromium";
 import osRelease from "linux-os-release";
 
-let browser: Browser | null = null;
+// Tambahkan plugin stealth ke puppeteer-extra
+puppeteer.use(StealthPlugin());
+
+let browser: any = null; // Gunakan any atau tipe dari puppeteer-extra
 
 /**
  * Mengecek apakah sistem adalah Alpine Linux.
@@ -18,7 +24,6 @@ async function isAlpineLinux(): Promise<boolean> {
 
 /**
  * Mengambil instance browser global.
- * Jika belum ada, browser akan dibuat dan disimpan secara singleton.
  */
 export async function getBrowser(): Promise<Browser> {
     if (browser) {
@@ -32,43 +37,33 @@ export async function getBrowser(): Promise<Browser> {
         if (await isAlpineLinux()) {
             executablePath = "/usr/bin/chromium-browser";
             args = [
-                // Flag Wajib Alpine/Root
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
-
-                // === BAGIAN INI YANG DIUBAH UNTUK MAKSA GPU ===
+                // Flag GPU tetap dipertahankan sesuai permintaanmu
                 "--use-gl=angle",
                 "--use-angle=gl-egl",
                 "--use-cmd-decoder=passthrough",
-                // =============================================
-
                 "--disable-blink-features=AutomationControlled",
             ];
         } else {
             executablePath = await chromium.executablePath();
-            args = [
-                ...chromium.args,
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-                // "--disable-software-rasterizer",
-                "--disable-blink-features=AutomationControlled",
-            ];
+            args = [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-blink-features=AutomationControlled"];
         }
     } else {
         executablePath = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
         args = [
-            "--no-sandbox",
-            "--disable-setuid-sandbox", //
+            "--no-sandbox", //
+            "--disable-setuid-sandbox",
             "--disable-dev-shm-usage",
             "--disable-software-rasterizer",
             "--disable-blink-features=AutomationControlled",
         ];
     }
 
+    // Panggilan launch sekarang melalui puppeteer-extra yang sudah memakai StealthPlugin
     browser = await puppeteer.launch({
-        headless: process.platform === "linux" ? "shell" : false,
+        headless: false, // Disarankan false untuk login Google
         executablePath,
         args,
         userDataDir: "user_data",
@@ -88,12 +83,12 @@ export async function closeBrowser(): Promise<void> {
 }
 
 /**
- * Helper untuk memastikan browser selalu tersedia
- * dan otomatis membuat page baru.
+ * Helper untuk membuat page baru dengan Stealth terintegrasi.
  */
 export async function newPage() {
     const br = await getBrowser();
     const page = await br.newPage();
+    // User Agent terbaru agar sinkron dengan stealth
     await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.6194.0 Safari/537.36");
     return page;
 }
