@@ -1,5 +1,5 @@
 import puppeteer, { Browser } from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import chromium from "@sparticuz/chromium-min";
 import osRelease from "linux-os-release";
 import path from "path";
 import fs from "fs-extra";
