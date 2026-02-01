@@ -6,7 +6,9 @@ import fs from "fs-extra";
 import axios from "axios";
 
 // Proxy configuration
-const PROXY_URL = "http://oshjjsmn:d0mhd2iof8m0@23.95.150.145:6114";
+const PROXY_URL = "http://23.95.150.145:6114";
+const PROXY_USERNAME = "oshjjsmn";
+const PROXY_PASSWORD = "d0mhd2iof8m0";
 
 let proxyBrowser: Browser | null = null;
 
@@ -74,6 +76,13 @@ async function closeProxyBrowser(): Promise<void> {
 async function newProxyPage() {
     const br = await getProxyBrowser();
     const page = await br.newPage();
+
+    // Authenticate with proxy
+    await page.authenticate({
+        username: PROXY_USERNAME,
+        password: PROXY_PASSWORD,
+    });
+
     await page.setUserAgent({
         userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0",
     });
