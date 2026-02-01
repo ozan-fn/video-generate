@@ -4,10 +4,8 @@ import path from "path";
 import fs from "fs-extra";
 
 export interface GenerateWithPromptOptions {
-    image1Buffer: Buffer;
-    image2Buffer: Buffer;
-    image1Name: string;
-    image2Name: string;
+    imageBuffers: Buffer[];
+    imageNames: string[];
     prompt: string;
 }
 
@@ -129,7 +127,7 @@ export class ImageService {
     }
 
     /**
-     * Process 2 images dengan Gemini
+     * Process multiple images (1-5) dengan Gemini
      */
     async processWithGemini(options: GenerateWithPromptOptions): Promise<string> {
         const browser = await getBrowser();
@@ -146,11 +144,10 @@ export class ImageService {
                 timeout: 60000,
             });
 
-            // Paste gambar pertama
-            await this.pasteImageToElement(page, options.image1Buffer, options.image1Name, this.richTextarea);
-
-            // Paste gambar kedua
-            await this.pasteImageToElement(page, options.image2Buffer, options.image2Name, this.richTextarea);
+            // Paste all images
+            for (let i = 0; i < options.imageBuffers.length; i++) {
+                await this.pasteImageToElement(page, options.imageBuffers[i], options.imageNames[i], this.richTextarea);
+            }
 
             // Type prompt
             await page.click(this.richTextarea);

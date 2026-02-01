@@ -29,10 +29,8 @@ export const generate = async (req: Request, res: Response) => {
 
         // Process with Gemini
         const base64 = await imageService.processWithGemini({
-            image1Buffer: files[0].buffer,
-            image2Buffer: files[1].buffer,
-            image1Name: files[0].originalname,
-            image2Name: files[1].originalname,
+            imageBuffers: files.map((f) => f.buffer),
+            imageNames: files.map((f) => f.originalname),
             prompt,
         });
 
@@ -79,10 +77,8 @@ export const generateVideo = async (req: Request, res: Response) => {
 
         // Process with Gemini
         const base64 = await imageService.processWithGemini({
-            image1Buffer: files[0].buffer,
-            image2Buffer: files[1].buffer,
-            image1Name: files[0].originalname,
-            image2Name: files[1].originalname,
+            imageBuffers: files.map((f) => f.buffer),
+            imageNames: files.map((f) => f.originalname),
             prompt,
         });
 
