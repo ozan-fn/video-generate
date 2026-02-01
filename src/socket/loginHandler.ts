@@ -21,7 +21,6 @@ export default async function loginHandler(socket: Socket) {
 
         await page.goto("https://gemini.google.com/?hl=en", { waitUntil: "domcontentloaded" });
 
-        await page.waitForNavigation();
         await Promise.all([
             page.waitForNavigation(), //
             page.click("text=Sign in"),
