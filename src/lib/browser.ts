@@ -1,11 +1,8 @@
 import puppeteer, { Browser } from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 import osRelease from "linux-os-release";
-import axios from "axios";
-import { spawn, type ChildProcess } from "child_process";
 
 let browser: Browser | null = null;
-let spawnedChrome: ChildProcess | null = null;
 
 /**
  * Mengecek apakah sistem adalah Alpine Linux.
@@ -27,16 +24,6 @@ export async function getBrowser(): Promise<Browser> {
     if (browser) {
         return browser;
     }
-
-    // If provided, connect to an existing Chrome instance via remote debugging
-    const remoteWsEndpoint = process.env.CHROME_WS_ENDPOINT;
-    if (remoteWsEndpoint) {
-        browser = await puppeteer.connect({ browserWSEndpoint: remoteWsEndpoint });
-        return browser;
-    }
-
-    // If provided, launch Chrome with remote debugging port then connect
-    const remotePort = process.env.CHROME_DEBUG_PORT;
 
     let executablePath: string;
     let args: string[];
@@ -80,40 +67,6 @@ export async function getBrowser(): Promise<Browser> {
         ];
     }
 
-    if (remotePort) {
-        const chromeArgs = [
-            `--remote-debugging-port=${remotePort}`,
-            "--no-first-run",
-            "--no-default-browser-check",
-            ...args,
-        ];
-
-        spawnedChrome = spawn(executablePath, chromeArgs, {
-            stdio: "ignore",
-            detached: true,
-        });
-
-        const versionUrl = `http://127.0.0.1:${remotePort}/json/version`;
-        let wsEndpoint = "";
-        for (let i = 0; i < 20; i++) {
-            try {
-                const res = await axios.get(versionUrl, { timeout: 1000 });
-                wsEndpoint = res.data?.webSocketDebuggerUrl;
-                if (wsEndpoint) break;
-            } catch {
-                // retry
-            }
-            await new Promise((r) => setTimeout(r, 250));
-        }
-
-        if (!wsEndpoint) {
-            throw new Error("Failed to get Chrome WebSocket endpoint");
-        }
-
-        browser = await puppeteer.connect({ browserWSEndpoint: wsEndpoint });
-        return browser;
-    }
-
     browser = await puppeteer.launch({
         headless: process.platform === "linux" ? true : false,
         executablePath,
@@ -132,15 +85,6 @@ export async function closeBrowser(): Promise<void> {
         await browser.close();
         browser = null;
     }
-
-    if (spawnedChrome && !spawnedChrome.killed) {
-        try {
-            spawnedChrome.kill();
-        } catch {
-            // ignore
-        }
-        spawnedChrome = null;
-    }
 }
 
 /**
@@ -150,6 +94,8 @@ export async function closeBrowser(): Promise<void> {
 export async function newPage() {
     const br = await getBrowser();
     const page = await br.newPage();
-    await page.setUserAgent("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 OPR/126.0.0.0");
+    await page.setUserAgent({
+        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    });
     return page;
 }
