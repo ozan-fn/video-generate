@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "concurrently -n \"SERVER,CLIENT\" -c \"blue,green\" \"nodemon\" \"cd client && npm run dev\"",
     "dev:server": "nodemon",
-    "dev:client": "cd client && npm run dev"
+    "dev:client": "cd client && npm run dev",
+    "start": "mkdir -p ./tmp && git stash && git pull && TMPDIR=./tmp tsx src"
   },
   "repository": {
     "type": "git",
