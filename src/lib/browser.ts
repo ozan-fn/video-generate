@@ -72,6 +72,7 @@ export async function getBrowser(): Promise<Browser> {
         executablePath,
         args,
         userDataDir: "user_data",
+        dumpio: true,
     });
 
     return browser;
