@@ -38,34 +38,20 @@ export async function getBrowser(): Promise<Browser> {
                 "--disable-dev-shm-usage",
 
                 // === BAGIAN INI YANG DIUBAH UNTUK MAKSA GPU ===
-                '--use-gl=angle',
-                '--use-angle=gl-egl',
-                '--use-cmd-decoder=passthrough',
+                "--use-gl=angle",
+                "--use-angle=gl-egl",
+                "--use-cmd-decoder=passthrough",
                 // =============================================
 
                 "--disable-blink-features=AutomationControlled",
             ];
         } else {
             executablePath = await chromium.executablePath();
-            args = [
-                ...chromium.args,
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-                "--disable-software-rasterizer",
-                "--disable-blink-features=AutomationControlled",
-            ];
+            args = [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-software-rasterizer", "--disable-blink-features=AutomationControlled"];
         }
     } else {
-        executablePath =
-            "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
-        args = [
-            "--no-sandbox",
-            "--disable-setuid-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-software-rasterizer",
-            "--disable-blink-features=AutomationControlled",
-        ];
+        executablePath = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
+        args = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-software-rasterizer", "--disable-blink-features=AutomationControlled"];
     }
 
     browser = await puppeteer.launch({
