@@ -244,9 +244,16 @@ export class VideoService {
                 images: images.map((img) => ({ name: img.name, size: img.size })),
             };
         } catch (error) {
-            const screenshot = await page.screenshot({ encoding: "base64" });
+            let screenshot: string | undefined;
+            try {
+                screenshot = await page.screenshot({ encoding: "base64" });
+            } catch {
+                // Page may be detached, ignore screenshot error
+            }
             const err = new Error(error instanceof Error ? error.message : "Video generation failed");
-            (err as Error & { screenshot?: string }).screenshot = screenshot;
+            if (screenshot) {
+                (err as Error & { screenshot?: string }).screenshot = screenshot;
+            }
             throw err;
         } finally {
             page.off("response", onResponse);
@@ -320,9 +327,16 @@ export class VideoService {
                 urlHistory: nextUrlHistory,
             };
         } catch (error) {
-            const screenshot = await page.screenshot({ encoding: "base64" });
+            let screenshot: string | undefined;
+            try {
+                screenshot = await page.screenshot({ encoding: "base64" });
+            } catch {
+                // Page may be detached, ignore screenshot error
+            }
             const err = new Error(error instanceof Error ? error.message : "Video generation failed");
-            (err as Error & { screenshot?: string }).screenshot = screenshot;
+            if (screenshot) {
+                (err as Error & { screenshot?: string }).screenshot = screenshot;
+            }
             throw err;
         } finally {
             page.off("response", onResponse);
