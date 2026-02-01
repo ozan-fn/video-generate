@@ -1,10 +1,8 @@
-import { connect } from "puppeteer-real-browser";
+import puppeteer, { Browser } from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 import osRelease from "linux-os-release";
 
-type RealBrowser = Awaited<ReturnType<typeof connect>>["browser"];
-
-let browser: RealBrowser | null = null;
+let browser: Browser | null = null;
 
 /**
  * Mengecek apakah sistem adalah Alpine Linux.
@@ -22,7 +20,7 @@ async function isAlpineLinux(): Promise<boolean> {
  * Mengambil instance browser global.
  * Jika belum ada, browser akan dibuat dan disimpan secara singleton.
  */
-export async function getBrowser(): Promise<RealBrowser> {
+export async function getBrowser(): Promise<Browser> {
     if (browser) {
         return browser;
     }
@@ -69,30 +67,13 @@ export async function getBrowser(): Promise<RealBrowser> {
         ];
     }
 
-    const { browser: connectedBrowser, page } = await connect({
-        headless: false,
+    browser = await puppeteer.launch({
+        headless: process.platform === "linux" ? true : false,
+        executablePath,
         args,
-        customConfig: {
-            chromePath: executablePath,
-            userDataDir: "user_data",
-        },
-        connectOption: {
-            defaultViewport: null,
-        },
+        userDataDir: "user_data",
     });
 
-    browser = connectedBrowser;
-
-    // Close the initial page opened by connect; callers will use newPage()
-    try {
-        await page.close();
-    } catch {
-        // ignore
-    }
-
-    if (!browser) {
-        throw new Error("Browser not initialized");
-    }
     return browser;
 }
 
