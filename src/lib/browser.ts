@@ -48,7 +48,7 @@ export async function getBrowser(): Promise<Browser> {
         } else {
             executablePath = await chromium.executablePath();
             args = [
-                ...chromium.args,
+                // ...chromium.args,
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",

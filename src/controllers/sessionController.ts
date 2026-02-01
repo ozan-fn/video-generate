@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Page } from "puppeteer-core";
-import { getBrowser, newPage } from "../lib/browser";
+import { getBrowser } from "../lib/browser";
 
 interface SessionData {
     id: string;
@@ -17,11 +17,11 @@ export const createSession = async (req: Request, res: Response) => {
         res.status(400).json({ error: "Email and password are required" });
         return;
     }
-    // const context = await (await getBrowser()).createBrowserContext();
+    const context = await (await getBrowser()).createBrowserContext();
 
     let session: SessionData = {
         id: email,
-        page: await newPage(),
+        page: await context.newPage(),
         cookies: [],
         status: "idle",
     };
