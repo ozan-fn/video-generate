@@ -1,11 +1,6 @@
-import puppeteer from "puppeteer-extra";
-import type { Browser } from "puppeteer-core";
-import StealthPlugin from "puppeteer-extra-plugin-stealth";
+import puppeteer, { Browser } from "puppeteer-core";
 import chromium from "@sparticuz/chromium";
 import osRelease from "linux-os-release";
-
-// Apply stealth plugin
-puppeteer.use(StealthPlugin());
 
 let browser: Browser | null = null;
 
@@ -52,28 +47,32 @@ export async function getBrowser(): Promise<Browser> {
             ];
         } else {
             executablePath = await chromium.executablePath();
-            args = [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-software-rasterizer", "--disable-blink-features=AutomationControlled"];
+            args = [
+                // ...chromium.args,
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-software-rasterizer",
+                "--disable-blink-features=AutomationControlled",
+            ];
         }
     } else {
         executablePath = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
-        args = ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-software-rasterizer", "--disable-blink-features=AutomationControlled"];
+        args = [
+            "--no-sandbox",
+            "--disable-setuid-sandbox", //
+            "--disable-dev-shm-usage",
+            "--disable-software-rasterizer",
+            "--disable-blink-features=AutomationControlled",
+        ];
     }
 
     browser = await puppeteer.launch({
-        headless: process.platform === "linux" ? true : true,
+        headless: process.platform === "linux",
         executablePath,
         args,
         userDataDir: "user_data",
-        defaultViewport: {
-            width: 1920,
-            height: 1080,
-            deviceScaleFactor: 1,
-        },
     });
-
-    if (!browser) {
-        throw new Error("Failed to launch browser");
-    }
 
     return browser;
 }
@@ -95,19 +94,5 @@ export async function closeBrowser(): Promise<void> {
 export async function newPage() {
     const br = await getBrowser();
     const page = await br.newPage();
-
-    // Set realistic viewport
-    await page.setViewport({ width: 1920, height: 1080 });
-
-    // Set realistic headers
-    await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 OPR/126.0.0.0");
-    await page.setExtraHTTPHeaders({
-        "Accept-Language": "en-US,en;q=0.9",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Encoding": "gzip, deflate, br",
-        Connection: "keep-alive",
-        "Upgrade-Insecure-Requests": "1",
-    });
-
     return page;
 }
