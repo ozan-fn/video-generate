@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/ozan-fn/video-generate#readme",
   "dependencies": {
-    "@sparticuz/chromium": "^143.0.4",
+    "@sparticuz/chromium": "^138",
     "@types/express": "^5.0.6",
     "@types/fs-extra": "^11.0.4",
     "@types/multer": "^2.0.0",
