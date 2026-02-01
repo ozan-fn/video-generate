@@ -13,18 +13,18 @@ export default async function loginHandler(socket: Socket) {
 
         userPages.set(socket.id, page);
 
-        const interval = setInterval(async () => {
-            const base64 = await page.screenshot({ type: "webp", encoding: "base64" });
-            socket.emit("screenshot", base64);
-        }, 2000);
-        userIntervals.set(socket.id, interval);
-
         await page.goto("https://gemini.google.com/?hl=en");
 
         await Promise.all([
             page.waitForNavigation(), //
             page.click("text=Sign in"),
         ]);
+
+        const interval = setInterval(async () => {
+            const base64 = await page.screenshot({ type: "webp", encoding: "base64" });
+            socket.emit("screenshot", base64);
+        }, 2000);
+        userIntervals.set(socket.id, interval);
 
         const state = userState.get(socket.id);
         console.log(msg);
