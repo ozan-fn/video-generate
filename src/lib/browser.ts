@@ -60,11 +60,20 @@ export async function getBrowser(): Promise<Browser> {
     }
 
     browser = await puppeteer.launch({
-        headless: process.platform === "linux" ? "new" : true,
+        headless: process.platform === "linux" ? true : true,
         executablePath,
         args,
         userDataDir: "user_data",
+        defaultViewport: {
+            width: 1920,
+            height: 1080,
+            deviceScaleFactor: 1,
+        },
     });
+
+    if (!browser) {
+        throw new Error("Failed to launch browser");
+    }
 
     return browser;
 }
@@ -87,11 +96,24 @@ export async function newPage() {
     const br = await getBrowser();
     const page = await br.newPage();
 
+    // Set realistic viewport
+    await page.setViewport({ width: 1920, height: 1080 });
+
     // Set realistic headers
     await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
     await page.setExtraHTTPHeaders({
         "Accept-Language": "en-US,en;q=0.9",
         Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Encoding": "gzip, deflate, br",
+        Connection: "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+    });
+
+    // Disable webdriver
+    await page.evaluateOnNewDocument(() => {
+        Object.defineProperty(navigator, "webdriver", {
+            get: () => false,
+        });
     });
 
     return page;
