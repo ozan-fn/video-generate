@@ -1,5 +1,5 @@
 import { Button } from "../ui/button";
-import { Home, Video as VideoIcon, Settings, LogOut, LogIn, X } from "lucide-react";
+import { Home, Video as VideoIcon, Settings, LogOut, LogIn, X, FileVideo } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 interface SidebarProps {
@@ -13,6 +13,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const menuItems = [
         { icon: Home, label: "Home", href: "/" },
         { icon: VideoIcon, label: "Video", href: "/video" },
+        { icon: FileVideo, label: "Generated Videos", href: "/generated-videos" },
         { icon: Settings, label: "Settings", href: "/settings" },
         { icon: LogIn, label: "Login", href: "/login" },
     ];

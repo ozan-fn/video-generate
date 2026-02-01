@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import Video from "./pages/Video";
+import GeneratedVideos from "./pages/GeneratedVideos";
 
 const App = () => {
     return (
@@ -11,6 +12,7 @@ const App = () => {
             <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/video" element={<Video />} />
+                <Route path="/generated-videos" element={<GeneratedVideos />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/login" element={<Login />} />
             </Routes>
