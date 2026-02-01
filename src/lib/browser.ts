@@ -48,7 +48,7 @@ export async function getBrowser(): Promise<Browser> {
         } else {
             executablePath = await chromium.executablePath();
             args = [
-                // ...chromium.args,
+                ...chromium.args,
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
@@ -68,7 +68,7 @@ export async function getBrowser(): Promise<Browser> {
     }
 
     browser = await puppeteer.launch({
-        headless: process.platform === "linux" ? true : false,
+        headless: process.platform === "linux" ? "shell" : false,
         executablePath,
         args,
         userDataDir: "user_data",
