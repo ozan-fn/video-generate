@@ -9,15 +9,65 @@ export const getInfo = (req: Request, res: Response) => {
     res.json({ message: "Video Generate API Server" });
 };
 
+export const generate = async (req: Request, res: Response) => {
+    try {
+        const { prompt } = req.body;
+        const files = req.files as Express.Multer.File[];
+
+        // Validation
+        if (!files || files.length < 1 || files.length > 5) {
+            return res.status(400).json({
+                error: "Between 1 and 5 image files are required",
+            });
+        }
+
+        if (!prompt) {
+            return res.status(400).json({
+                error: "Prompt is required",
+            });
+        }
+
+        // Process with Gemini
+        const base64 = await imageService.processWithGemini({
+            image1Buffer: files[0].buffer,
+            image2Buffer: files[1].buffer,
+            image1Name: files[0].originalname,
+            image2Name: files[1].originalname,
+            prompt,
+        });
+
+        res.json({
+            message: "Image generated successfully",
+            image: `data:image/png;base64,${base64}`,
+            images: files.map((f) => ({
+                name: f.originalname,
+                size: f.size,
+            })),
+        });
+    } catch (error) {
+        const err = error as Error & { screenshot?: string };
+        if (err?.screenshot) {
+            return res.status(500).json({
+                error: err.message || "Gemini processing failed",
+                screenshot: `data:image/png;base64,${err.screenshot}`,
+            });
+        }
+
+        res.status(500).json({
+            error: error instanceof Error ? error.message : "Unknown error",
+        });
+    }
+};
+
 export const generateVideo = async (req: Request, res: Response) => {
     try {
         const { prompt } = req.body;
         const files = req.files as Express.Multer.File[];
 
         // Validation
-        if (!files || files.length !== 2) {
+        if (!files || files.length < 1 || files.length > 5) {
             return res.status(400).json({
-                error: "Exactly 2 image files are required",
+                error: "Between 1 and 5 image files are required",
             });
         }
 
