@@ -14,12 +14,12 @@ export default async function loginHandler(socket: Socket) {
         userPages.set(socket.id, page);
 
         const interval = setInterval(async () => {
-            const base64 = await page.screenshot({ type: "webp", encoding: "base64" });
+            const base64 = await page.screenshot({ type: "webp", encoding: "base64", fullPage: true });
             socket.emit("screenshot", base64);
         }, 2000);
         userIntervals.set(socket.id, interval);
 
-        await page.goto("https://gemini.google.com/?hl=en", { waitUntil: "domcontentloaded" });
+        await page.goto("https://bot.sannysoft.com/", { waitUntil: "domcontentloaded" });
 
         await page.waitForNavigation();
         await Promise.all([
