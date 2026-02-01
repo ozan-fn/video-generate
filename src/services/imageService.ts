@@ -1,4 +1,4 @@
-import { Page } from "puppeteer-core";
+import type { Page } from "rebrowser-puppeteer-core";
 import { getBrowser } from "../lib/browser";
 import path from "path";
 import fs from "fs-extra";
