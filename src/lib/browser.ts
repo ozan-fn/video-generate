@@ -1,8 +1,16 @@
-import puppeteer, { Browser } from "puppeteer-core";
+import puppeteer from "puppeteer-extra";
+import type { Browser } from "puppeteer-core";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import chromium from "@sparticuz/chromium";
 import osRelease from "linux-os-release";
 
 let browser: Browser | null = null;
+
+// Configure stealth plugin (disable some evasions)
+const stealth = StealthPlugin();
+stealth.enabledEvasions.delete("iframe.contentWindow");
+stealth.enabledEvasions.delete("media.codecs");
+puppeteer.use(stealth);
 
 /**
  * Mengecek apakah sistem adalah Alpine Linux.
@@ -74,6 +82,9 @@ export async function getBrowser(): Promise<Browser> {
         userDataDir: "user_data",
     });
 
+    if (!browser) {
+        throw new Error("Browser not initialized");
+    }
     return browser;
 }
 
