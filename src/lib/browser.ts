@@ -68,7 +68,7 @@ export async function getBrowser(): Promise<Browser> {
     }
 
     browser = await puppeteer.launch({
-        headless: process.platform === "linux",
+        headless: process.platform === "linux" ? true : false,
         executablePath,
         args,
         userDataDir: "user_data",
