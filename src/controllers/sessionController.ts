@@ -28,6 +28,7 @@ export const createSession = async (req: Request, res: Response) => {
     sessions.push(session);
     setTimeout(async () => {
         sessions.find((s) => s.id === session.id)!.status = "processing";
+        await session.page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0");
         await session.page.goto("https://gemini.google.com/app?hl=en", { waitUntil: "networkidle2" });
         await session.page.click("text=Sign in");
         await session.page.waitForSelector('input[type="email"]', { visible: true });
