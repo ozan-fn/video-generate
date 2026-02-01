@@ -132,7 +132,7 @@ const Video = () => {
 
     return (
         <MainLayout>
-            <div className="container py-6 space-y-6">
+            <div className="max-w-6xl mx-auto space-y-6">
                 {!response ? (
                     <>
                         <VideoPageHeader />

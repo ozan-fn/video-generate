@@ -92,7 +92,7 @@ const Home = () => {
 
     return (
         <MainLayout>
-            <div className="container py-6">
+            <div className="max-w-6xl mx-auto">
                 <PageHeader />
 
                 {!response ? (

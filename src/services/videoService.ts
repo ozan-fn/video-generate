@@ -1,7 +1,84 @@
-import { newPage } from "../lib/browser";
+import puppeteer, { Browser } from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
+import osRelease from "linux-os-release";
 import path from "path";
 import fs from "fs-extra";
 import axios from "axios";
+
+// Proxy configuration
+const PROXY_URL = "http://oshjjsmn:d0mhd2iof8m0@23.95.150.145:6114";
+
+let proxyBrowser: Browser | null = null;
+
+/**
+ * Mengecek apakah sistem adalah Alpine Linux.
+ */
+async function isAlpineLinux(): Promise<boolean> {
+    try {
+        const info = await osRelease();
+        return info.ID === "alpine";
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Mengambil instance browser proxy global.
+ */
+async function getProxyBrowser(): Promise<Browser> {
+    if (proxyBrowser) {
+        return proxyBrowser;
+    }
+
+    let executablePath: string;
+    let args: string[] = [`--proxy-server=${PROXY_URL}`];
+
+    if (process.platform === "linux") {
+        if (await isAlpineLinux()) {
+            executablePath = "/usr/bin/chromium-browser";
+            args.unshift("--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--use-gl=angle", "--use-angle=gl-egl", "--use-cmd-decoder=passthrough");
+        } else {
+            executablePath = await chromium.executablePath();
+            args.unshift(...chromium.args, "--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage");
+        }
+    } else {
+        executablePath = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
+        args.unshift("--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-software-rasterizer");
+    }
+
+    args.push("--disable-blink-features=AutomationControlled");
+
+    proxyBrowser = await puppeteer.launch({
+        headless: process.platform === "linux" ? true : false,
+        executablePath,
+        args,
+        userDataDir: "user_data",
+    });
+
+    return proxyBrowser;
+}
+
+/**
+ * Menutup proxy browser global jika sedang aktif.
+ */
+async function closeProxyBrowser(): Promise<void> {
+    if (proxyBrowser) {
+        await proxyBrowser.close();
+        proxyBrowser = null;
+    }
+}
+
+/**
+ * Helper untuk membuat page baru dengan proxy.
+ */
+async function newProxyPage() {
+    const br = await getProxyBrowser();
+    const page = await br.newPage();
+    await page.setUserAgent({
+        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0",
+    });
+    return page;
+}
 
 export interface GenerateVideoOptions {
     prompt: string;
@@ -23,7 +100,7 @@ export interface GenerateVideoResult {
 export class VideoService {
     private cookiesPath = path.join(process.cwd(), "cookies", "meta", "cookies.json");
 
-    private async loadCookies(page: Awaited<ReturnType<typeof newPage>>): Promise<void> {
+    private async loadCookies(page: Awaited<ReturnType<typeof newProxyPage>>): Promise<void> {
         try {
             if (await fs.pathExists(this.cookiesPath)) {
                 const cookies = await fs.readJson(this.cookiesPath);
@@ -35,7 +112,7 @@ export class VideoService {
         }
     }
 
-    private async saveCookies(page: Awaited<ReturnType<typeof newPage>>): Promise<void> {
+    private async saveCookies(page: Awaited<ReturnType<typeof newProxyPage>>): Promise<void> {
         try {
             const cookies = await page.cookies();
             await fs.ensureDir(path.dirname(this.cookiesPath));
@@ -46,7 +123,7 @@ export class VideoService {
         }
     }
 
-    private async pasteImagesToElement(page: Awaited<ReturnType<typeof newPage>>, images: Array<{ buffer: Buffer; name: string }>, selector: string): Promise<void> {
+    private async pasteImagesToElement(page: Awaited<ReturnType<typeof newProxyPage>>, images: Array<{ buffer: Buffer; name: string }>, selector: string): Promise<void> {
         await page.click(selector);
 
         await page.evaluate(
@@ -102,7 +179,7 @@ export class VideoService {
             size: file.size,
         }));
 
-        const page = await newPage();
+        const page = await newProxyPage();
 
         let latestMediaUrl: string | null = null;
         const onResponse = (res: Awaited<ReturnType<typeof page.waitForResponse>>) => {
@@ -175,13 +252,14 @@ export class VideoService {
             page.off("response", onResponse);
             await this.saveCookies(page);
             await page.close();
+            await closeProxyBrowser();
         }
     }
 
     async generateFromVideoAndPrompt(options: GenerateVideoFromVideoOptions): Promise<GenerateVideoResult> {
         const { prompt, urlHistory } = options;
 
-        const page = await newPage();
+        const page = await newProxyPage();
         let latestMediaUrl: string | null = null;
         const onResponse = (res: Awaited<ReturnType<typeof page.waitForResponse>>) => {
             try {
@@ -250,6 +328,7 @@ export class VideoService {
             page.off("response", onResponse);
             await this.saveCookies(page);
             await page.close();
+            await closeProxyBrowser();
         }
     }
 }

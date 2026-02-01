@@ -5,7 +5,7 @@ import { Bell, Lock, User, Palette } from "lucide-react";
 const Settings = () => {
     return (
         <MainLayout>
-            <div className="container py-6">
+            <div className="max-w-6xl mx-auto">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold mb-2">Settings</h1>
                     <p className="text-muted-foreground">Manage your account and application preferences.</p>

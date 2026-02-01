@@ -97,7 +97,7 @@ const Login = () => {
 
     return (
         <MainLayout>
-            <div className="container flex items-center justify-center min-h-[80vh]">
+            <div className="flex items-center justify-center min-h-[80vh]">
                 <div className="w-full max-w-md space-y-6">
                     {screenshot && (
                         <div className="flex justify-center">
