@@ -19,7 +19,7 @@ export default async function loginHandler(socket: Socket) {
         }, 2000);
         userIntervals.set(socket.id, interval);
 
-        await page.goto("https://gemini.google.com/?hl=en", { waitUntil: "domcontentloaded" });
+        await page.goto("https://gemini.google.com/?hl=en");
 
         await Promise.all([
             page.waitForNavigation(), //
