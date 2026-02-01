@@ -95,5 +95,6 @@ export async function closeBrowser(): Promise<void> {
 export async function newPage() {
     const br = await getBrowser();
     const page = await br.newPage();
+    await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 OPR/126.0.0.0");
     return page;
 }
