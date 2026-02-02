@@ -19,6 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', apiRoutes);
 app.use('/api/session', sessionRoutes);
 
+const distPath1 = path.join(__dirname, '../storages');
+app.use('/storages', express.static(distPath1));
+
 const distPath = path.join(__dirname, '../client/dist');
 app.use(express.static(distPath));
 
