@@ -2,17 +2,16 @@ import { Page, BrowserContext } from 'puppeteer-core';
 import { getBrowser } from '../lib/browser';
 import path from 'path';
 import fs from 'fs-extra';
-import { Session } from '../models/Session'; // Import model Mongoose Anda
+import { Session } from '../models/Session'; // Pastikan path model sesuai
 
 export interface GenerateWithPromptOptions {
-    sessionId: string; // Tambahkan sessionId untuk mencari di DB
     imageBuffers: Buffer[];
     imageNames: string[];
     prompt: string;
 }
 
 /**
- * Service untuk process gambar menggunakan Puppeteer dengan Mongoose Session
+ * Service untuk process gambar menggunakan Puppeteer dengan Random Mongoose Session
  */
 export class ImageService {
     private readonly richTextarea = 'rich-textarea';
@@ -21,38 +20,21 @@ export class ImageService {
     private readonly userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0';
 
     /**
-     * Load cookies from Mongoose
+     * Mengambil satu session secara random dari database yang berstatus 'valid'
      */
-    private async loadCookiesFromDb(page: Page, sessionId: string): Promise<void> {
+    private async getRandomValidSession() {
         try {
-            const session = await Session.findOne({ id: sessionId });
-            if (session && session.cookies) {
-                const parsedCookies = typeof session.cookies === 'string' ? JSON.parse(session.cookies) : session.cookies;
-                await page.setCookie(...parsedCookies);
-                console.log(`✅ Cookies loaded from DB for: ${sessionId}`);
-            }
-        } catch (error) {
-            console.warn('⚠️ Failed to load cookies from DB:', error);
-        }
-    }
+            // Menggunakan agregasi MongoDB untuk mengambil 1 dokumen secara acak
+            const sessions = await Session.aggregate([{ $match: { status: 'valid' } }, { $sample: { size: 1 } }]);
 
-    /**
-     * Save cookies to Mongoose (Upsert/Update)
-     */
-    private async saveCookiesToDb(page: Page, sessionId: string): Promise<void> {
-        try {
-            const currentCookies = await page.cookies();
-            await Session.findOneAndUpdate(
-                { id: sessionId },
-                {
-                    cookies: JSON.stringify(currentCookies),
-                    status: 'valid',
-                },
-                { upsert: true },
-            );
-            console.log(`✅ Cookies updated in DB for: ${sessionId}`);
+            if (sessions.length === 0) {
+                throw new Error('No valid sessions found in database');
+            }
+
+            return sessions[0];
         } catch (error) {
-            console.warn('⚠️ Failed to save cookies to DB:', error);
+            console.error('❌ Error fetching random session:', error);
+            throw error;
         }
     }
 
@@ -69,7 +51,10 @@ export class ImageService {
                 dt.items.add(new File([blob], name, { type: 'image/jpeg' }));
 
                 const event = new ClipboardEvent('paste', { clipboardData: dt, bubbles: true });
-                document.querySelector(sel)?.dispatchEvent(event);
+                const element = document.querySelector(sel);
+                if (element) {
+                    element.dispatchEvent(event);
+                }
             },
             fileName,
             Array.from(imageBuffer),
@@ -78,7 +63,7 @@ export class ImageService {
     }
 
     /**
-     * Wait until a response image is available and return the latest src
+     * Tunggu sampai gambar respon tersedia
      */
     private async getLatestResponseImageSrc(page: Page): Promise<string | null> {
         await page.waitForFunction(
@@ -98,7 +83,7 @@ export class ImageService {
     }
 
     /**
-     * Download image buffer from src
+     * Download gambar hasil generate
      */
     private async downloadImageBuffer(page: Page, imgSrc: string): Promise<Buffer> {
         if (imgSrc.startsWith('data:')) {
@@ -134,67 +119,67 @@ export class ImageService {
     }
 
     /**
-     * Process multiple images dengan Gemini menggunakan Browser Context & DB Session
+     * Main process dengan Gemini
      */
     async processWithGemini(options: GenerateWithPromptOptions): Promise<string> {
         const browser = await getBrowser();
-        // Menggunakan Browser Context baru agar terisolasi
         const context = await browser.createBrowserContext();
         const page = await context.newPage();
 
+        // 1. Ambil session secara random dari DB
+        const sessionDb = await this.getRandomValidSession();
+        const sessionId = sessionDb.id;
+
         try {
-            // Set User Agent
             await page.setUserAgent(this.userAgent);
 
-            // Load cookies dari Mongoose
-            await this.loadCookiesFromDb(page, options.sessionId);
+            // 2. Set Cookies dari session yang terpilih
+            if (sessionDb.cookies) {
+                const parsedCookies = typeof sessionDb.cookies === 'string' ? JSON.parse(sessionDb.cookies) : sessionDb.cookies;
+                await page.setCookie(...parsedCookies);
+                console.log(`🎲 Using random session: ${sessionId}`);
+            }
 
-            // Buka Gemini
             await page.goto('https://gemini.google.com/?hl=en', {
                 waitUntil: 'networkidle2',
                 timeout: 60000,
             });
 
-            // Paste all images
+            // 3. Paste Images
             for (let i = 0; i < options.imageBuffers.length; i++) {
                 await this.pasteImageToElement(page, options.imageBuffers[i], options.imageNames[i], this.richTextarea);
-                // Beri sedikit delay antar paste jika banyak gambar
-                await new Promise((r) => setTimeout(r, 500));
+                await new Promise((r) => setTimeout(r, 800)); // Jeda antar paste
             }
 
-            // Type prompt
+            // 4. Type Prompt & Submit
             await page.click(this.richTextarea);
             await page.type(this.richTextarea, options.prompt);
-
-            // Wait for spinner to be hidden
             await page.waitForSelector('mat-spinner', { hidden: true });
-
-            // Submit
             await page.keyboard.press('Enter');
 
-            // Wait for response ready
+            // 5. Wait for Response
             await page.waitForSelector(this.sendIconSelector, { visible: true, timeout: 120000 });
 
             const imgSrc = await this.getLatestResponseImageSrc(page);
-
-            if (!imgSrc) {
-                throw new Error('No image found in Gemini response');
-            }
+            if (!imgSrc) throw new Error('No image found in Gemini response');
 
             const imageBuffer = await this.downloadImageBuffer(page, imgSrc);
-            const base64 = imageBuffer.toString('base64');
 
-            return base64;
+            // 6. Update Cookies Terbaru ke DB (Upsert)
+            const currentCookies = await page.cookies();
+            await Session.findOneAndUpdate({ id: sessionId }, { cookies: JSON.stringify(currentCookies), status: 'valid' }, { upsert: true });
+
+            return imageBuffer.toString('base64');
         } catch (error) {
             const screenshot = await page.screenshot({ encoding: 'base64' });
+            console.error(`❌ Process failed for ${sessionId}:`, (error as Error).message);
+
             const err = new Error(`Gemini processing failed: ${(error as Error).message}`);
             (err as any).screenshot = screenshot;
             throw err;
         } finally {
-            // Update cookies ke DB setiap kali selesai (sukses/gagal)
-            await this.saveCookiesToDb(page, options.sessionId);
             await page.close();
-            await context.close(); // Tutup context
+            await context.close();
         }
     }
 }
