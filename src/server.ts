@@ -1,12 +1,12 @@
-import express, { Express } from "express";
-import path from "path";
-import compression from "compression";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import apiRoutes from "./routes/api";
-import registerSocketHandlers from "./socket";
-import sessionRoutes from "./routes/sessionRoutes";
-import bodyParser from "body-parser";
+import express, { Express } from 'express';
+import path from 'path';
+import compression from 'compression';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import apiRoutes from './routes/api';
+import registerSocketHandlers from './socket';
+import sessionRoutes from './routes/sessionRoutes';
+import bodyParser from 'body-parser';
 
 const app: Express = express();
 const httpServer = createServer(app);
@@ -16,18 +16,19 @@ app.use(compression({ level: 6 }));
 app.use(bodyParser.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/session", sessionRoutes);
+app.use('/api', apiRoutes);
+app.use('/api/session', sessionRoutes);
 
-const distPath = path.join(__dirname, "../client/dist");
+const distPath = path.join(__dirname, '../client/dist');
 app.use(express.static(distPath));
 
 app.use((_req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
+    res.sendFile(path.join(distPath, 'index.html'));
 });
 
 const io = new Server(httpServer, {
     cors: {
-        origin: "*",
+        origin: '*',
     },
 });
 
