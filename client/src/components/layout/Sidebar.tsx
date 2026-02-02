@@ -11,6 +11,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     const location = useLocation();
 
     const menuItems = [
+        { icon: LogIn, label: "Sessions", href: "/sessions" },
         { icon: Home, label: "Home", href: "/" },
         { icon: VideoIcon, label: "Video", href: "/video" },
         { icon: FileVideo, label: "Generated Videos", href: "/generated-videos" },

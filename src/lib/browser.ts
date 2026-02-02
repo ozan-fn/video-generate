@@ -1,6 +1,6 @@
-import puppeteer, { Browser } from "puppeteer-core";
-import chromium from "@sparticuz/chromium-min";
-import osRelease from "linux-os-release";
+import puppeteer, { Browser } from 'puppeteer-core';
+import chromium from '@sparticuz/chromium-min';
+import osRelease from 'linux-os-release';
 
 let browser: Browser | null = null;
 
@@ -10,7 +10,7 @@ let browser: Browser | null = null;
 async function isAlpineLinux(): Promise<boolean> {
     try {
         const info = await osRelease();
-        return info.ID === "alpine";
+        return info.ID === 'alpine';
     } catch {
         return false;
     }
@@ -28,50 +28,50 @@ export async function getBrowser(): Promise<Browser> {
     let executablePath: string;
     let args: string[];
 
-    if (process.platform === "linux") {
+    if (process.platform === 'linux') {
         if (await isAlpineLinux()) {
-            executablePath = "/usr/bin/chromium-browser";
+            executablePath = '/usr/bin/chromium-browser';
             args = [
                 // Flag Wajib Alpine/Root
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
 
                 // === BAGIAN INI YANG DIUBAH UNTUK MAKSA GPU ===
-                "--use-gl=angle",
-                "--use-angle=gl-egl",
-                "--use-cmd-decoder=passthrough",
+                '--use-gl=angle',
+                '--use-angle=gl-egl',
+                '--use-cmd-decoder=passthrough',
                 // =============================================
 
-                "--disable-blink-features=AutomationControlled",
+                '--disable-blink-features=AutomationControlled',
             ];
         } else {
             executablePath = await chromium.executablePath();
             args = [
                 // ...chromium.args,
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
                 // "--disable-software-rasterizer",
-                "--disable-blink-features=AutomationControlled",
+                '--disable-blink-features=AutomationControlled',
             ];
         }
     } else {
-        executablePath = "C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe";
+        executablePath = 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
         args = [
-            "--no-sandbox",
-            "--disable-setuid-sandbox", //
-            "--disable-dev-shm-usage",
-            "--disable-software-rasterizer",
-            "--disable-blink-features=AutomationControlled",
+            // '--no-sandbox',
+            // '--disable-setuid-sandbox', //
+            // '--disable-dev-shm-usage',
+            // '--disable-software-rasterizer',
+            '--disable-blink-features=AutomationControlled',
         ];
     }
 
     browser = await puppeteer.launch({
-        headless: process.platform === "linux" ? true : false,
+        headless: process.platform === 'linux' ? true : false,
         executablePath,
         args,
-        userDataDir: "user_data",
+        // userDataDir: "user_data",
     });
 
     return browser;
@@ -95,7 +95,7 @@ export async function newPage() {
     const br = await getBrowser();
     const page = await br.newPage();
     await page.setUserAgent({
-        userAgent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0",
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0',
     });
     return page;
 }
