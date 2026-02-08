@@ -1,0 +1,104 @@
+definitions:
+  controller.ClickRequest:
+    properties:
+      email:
+        type: string
+      selector:
+        type: string
+    type: object
+  controller.Request:
+    properties:
+      email:
+        type: string
+      passs:
+        type: string
+    type: object
+  controller.ResponseSession:
+    properties:
+      email:
+        type: string
+      screenshot:
+        items:
+          type: integer
+        type: array
+    type: object
+info:
+  contact: {}
+paths:
+  /api/session:
+    delete:
+      description: Delete an existing session
+      parameters:
+      - description: Email of the session to delete
+        in: query
+        name: email
+        required: true
+        type: string
+      responses:
+        "200":
+          description: Session deleted
+          schema:
+            type: string
+      summary: Delete session
+      tags:
+      - session
+    get:
+      description: Get list of active sessions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/controller.ResponseSession'
+            type: array
+      summary: List sessions
+      tags:
+      - session
+    post:
+      consumes:
+      - application/json
+      description: Create a new session
+      parameters:
+      - description: Login request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.Request'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login session
+      tags:
+      - session
+  /api/session/click:
+    post:
+      consumes:
+      - application/json
+      description: Click an element in the session
+      parameters:
+      - description: Click request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controller.ClickRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Clicked
+          schema:
+            type: string
+      summary: Click element
+      tags:
+      - session
+swagger: "2.0"
