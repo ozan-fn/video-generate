@@ -6,6 +6,6 @@
     "main": "pathToMain",
     "dependencies": {},
     "scripts": {
-        "start": "chmod +x ./main && ./main"
+        "start": "git pull; chmod +x ./main && ./main"
     }
 }
