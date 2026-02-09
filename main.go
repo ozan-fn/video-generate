@@ -4,17 +4,26 @@ import (
 	"log"
 
 	"zan6/controller"
+	"zan6/database"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load environment variables from .env
+	godotenv.Load()
+
+	// Connect to MongoDB
+	if err := database.Connect(); err != nil {
+		log.Fatal("Failed to connect to MongoDB:", err)
+	}
+	defer database.Disconnect()
+
 	app := fiber.New()
 
-	app.Post("/api/session", controller.AddSession)
-	app.Get("/api/session", controller.ListSessions)
-	app.Post("/api/session/click", controller.ClickElement)
-	app.Delete("/api/session", controller.DeleteSession)
+	// Register session routes
+	controller.RegisterRoutes(app)
 
 	app.Get("/swagger.json", func(c *fiber.Ctx) error {
 		return c.SendFile("./docs/swagger.json")

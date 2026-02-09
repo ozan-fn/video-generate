@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/api/session": {
             "get": {
-                "description": "Get list of active sessions",
+                "description": "Get list of active sessions with cookies",
                 "produces": [
                     "application/json"
                 ],
@@ -38,7 +38,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new session",
+                "description": "Create a new session and save cookies to MongoDB",
                 "consumes": [
                     "application/json"
                 ],
@@ -73,7 +73,7 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Delete an existing session",
+                "description": "Delete session from MongoDB and close browser",
                 "tags": [
                     "session"
                 ],
@@ -81,7 +81,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Email of the session to delete",
+                        "description": "Email",
                         "name": "email",
                         "in": "query",
                         "required": true
@@ -89,9 +89,41 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Session deleted",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/session/check": {
+            "get": {
+                "description": "Check if session is still valid",
+                "tags": [
+                    "session"
+                ],
+                "summary": "Check session",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email",
+                        "name": "email",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "boolean"
+                            }
                         }
                     }
                 }
@@ -158,14 +190,20 @@ const docTemplate = `{
         "controller.ResponseSession": {
             "type": "object",
             "properties": {
+                "cookies": {
+                    "type": "string"
+                },
                 "email": {
                     "type": "string"
                 },
                 "screenshot": {
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         }

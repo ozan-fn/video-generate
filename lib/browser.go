@@ -2,20 +2,18 @@ package lib
 
 import (
 	"archive/tar"
-	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
-	"os/signal"
 	"path/filepath"
 	"runtime"
 	"strings"
 	"sync"
-	"syscall"
 
 	"github.com/andybalholm/brotli"
-	"github.com/chromedp/chromedp"
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
 )
 
 const (
@@ -25,51 +23,25 @@ const (
 )
 
 var (
-	ctx  context.Context
-	once sync.Once
+	browser     *rod.Browser
+	browserOnce sync.Once
 )
 
-func GetBrowser() (context.Context, context.CancelFunc) {
-	if ctx != nil {
-		return ctx, nil
-	}
+func GetBrowser() *rod.Browser {
+	browserOnce.Do(func() {
+		l := launcher.New().
+			Bin("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe").
+			Headless(false).
+			Set("no-sandbox").
+			Set("disable-setuid-sandbox").
+			Set("disable-dev-shm-usage").
+			Set("disable-blink-features", "AutomationControlled").
+			Set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36 Edg/144.0.0.0")
 
-	// once.Do(func() {
-	chromePath := BrowserPath()
+		browser = rod.New().ControlURL(l.MustLaunch()).MustConnect()
+	})
 
-	opts := append(chromedp.DefaultExecAllocatorOptions[:],
-		chromedp.ExecPath(chromePath),
-		chromedp.Flag("no-sandbox", true),
-		chromedp.Flag("disable-setuid-sandbox", true),
-		chromedp.Flag("disable-dev-shm-usage", true),
-		chromedp.Flag("headless", false),
-		chromedp.Flag("disable-blink-features", "AutomationControlled"),
-		chromedp.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36"),
-	)
-
-	var cancel context.CancelFunc
-	allocCtx, _ := chromedp.NewExecAllocator(context.Background(), opts...)
-	ctx, cancel = chromedp.NewContext(allocCtx)
-
-	// start browser
-	if err := chromedp.Run(ctx); err != nil {
-		panic(err)
-	}
-
-	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, os.Interrupt, syscall.SIGTERM)
-
-	// close browser on SIGTERM
-	go func() {
-		<-ch
-		cancel()
-		fmt.Println("Menutup browser...")
-		os.Exit(0)
-	}()
-
-	// })
-
-	return ctx, cancel
+	return browser
 }
 
 // BrowserPath memastikan biner Chromium tersedia.

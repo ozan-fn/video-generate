@@ -15,35 +15,41 @@ definitions:
     type: object
   controller.ResponseSession:
     properties:
+      cookies:
+        type: string
       email:
         type: string
       screenshot:
-        items:
-          type: integer
-        type: array
+        type: string
+      title:
+        type: string
+      url:
+        type: string
     type: object
 info:
   contact: {}
 paths:
   /api/session:
     delete:
-      description: Delete an existing session
+      description: Delete session from MongoDB and close browser
       parameters:
-      - description: Email of the session to delete
+      - description: Email
         in: query
         name: email
         required: true
         type: string
       responses:
         "200":
-          description: Session deleted
+          description: OK
           schema:
-            type: string
+            additionalProperties:
+              type: string
+            type: object
       summary: Delete session
       tags:
       - session
     get:
-      description: Get list of active sessions
+      description: Get list of active sessions with cookies
       produces:
       - application/json
       responses:
@@ -59,7 +65,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new session
+      description: Create a new session and save cookies to MongoDB
       parameters:
       - description: Login request
         in: body
@@ -77,6 +83,25 @@ paths:
               type: string
             type: object
       summary: Login session
+      tags:
+      - session
+  /api/session/check:
+    get:
+      description: Check if session is still valid
+      parameters:
+      - description: Email
+        in: query
+        name: email
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: boolean
+            type: object
+      summary: Check session
       tags:
       - session
   /api/session/click:
