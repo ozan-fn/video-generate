@@ -6,6 +6,6 @@
     "main": "pathToMain",
     "dependencies": {},
     "scripts": {
-        "start": "git pull; chmod +x ./main && ./main"
+        "start": "git stash; git pull; chmod +x ./main && ./main"
     }
 }
