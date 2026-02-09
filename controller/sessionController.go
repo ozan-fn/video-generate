@@ -284,7 +284,9 @@ func CheckSession(c *fiber.Ctx) error {
 	defer incognito.MustClose()
 
 	if err != nil {
-		return c.JSON(fiber.Map{"exists": false})
+		// kalo error kirim base64 screenshot
+		screenshot := page.MustScreenshot()
+		return c.JSON(fiber.Map{"exists": false, "screenshot": base64.StdEncoding.EncodeToString(screenshot)})
 	}
 
 	return c.JSON(fiber.Map{"exists": true})
