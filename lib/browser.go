@@ -29,8 +29,10 @@ var (
 
 func GetBrowser() *rod.Browser {
 	browserOnce.Do(func() {
+		browserPath := BrowserPath()
+
 		l := launcher.New().
-			Bin("C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe").
+			Bin(browserPath).
 			Headless(false).
 			Set("no-sandbox").
 			Set("disable-setuid-sandbox").

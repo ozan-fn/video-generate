@@ -73,65 +73,71 @@ func AddSession(c *fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Email and password are required"})
 	}
 
-	browser := lib.GetBrowser()
-	incognito := browser.MustIncognito()
-	page := incognito.MustPage("https://gemini.google.com")
-
-	// Login process
-	err := rod.Try(func() {
-		page.Timeout(30 * time.Second).MustElement(`a[aria-label="Sign in"]`).MustWaitVisible().MustClick()
-
-		emailInput := page.Timeout(30 * time.Second).MustElement(`input[type="email"]`).MustWaitVisible()
-		emailInput.MustInput(req.Email)
-		page.Timeout(15 * time.Second).MustElement(`#identifierNext`).MustWaitVisible().MustClick()
-
-		emailInput.MustWaitInvisible()
-
-		passwordInput := page.Timeout(30 * time.Second).MustElement(`input[type="password"]`).MustWaitVisible()
-		passwordInput.MustInput(req.Passs)
-		page.Timeout(15 * time.Second).MustElement(`#passwordNext`).MustWaitVisible().MustClick()
-
-		passwordInput.WaitInvisible()
-	})
-
-	if err != nil {
-		incognito.MustClose()
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{"error": err.Error()})
+	// check if session already exists database
+	existingSession, err := getSessionRepo().FindByEmail(req.Email)
+	if err == nil && existingSession != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Session already exists"})
 	}
 
-	// Check if login was successful
-	if strings.HasPrefix(page.MustInfo().URL, "https://gemini.google.com") {
-		cookies := page.MustCookies()
-		cookiesJSON, err := json.Marshal(cookies)
-		if err != nil {
-			log.Printf("Error marshaling cookies: %v", err)
+	// Run login process in background
+	go func() {
+		browser := lib.GetBrowser()
+		incognito := browser.MustIncognito()
+		page := incognito.MustPage("https://gemini.google.com")
+
+		browserSessions[req.Email] = &BrowserSession{
+			Email:     req.Email,
+			Incognito: incognito,
+			Page:      page,
 		}
 
-		database.DB.Collection("sessions").InsertOne(context.Background(),
-			map[string]interface{}{
-				"email":      req.Email,
-				"cookies":    string(cookiesJSON),
-				"created_at": time.Now(),
-				"updated_at": time.Now(),
-			},
-		)
+		// Login process
+		err := rod.Try(func() {
+			page.Timeout(30 * time.Second).MustElement(`a[aria-label="Sign in"]`).MustWaitVisible().MustClick()
 
-		incognito.MustClose()
+			emailInput := page.Timeout(30 * time.Second).MustElement(`input[type="email"]`).MustWaitVisible()
+			emailInput.MustInput(req.Email)
+			page.Timeout(15 * time.Second).MustElement(`#identifierNext`).MustWaitVisible().MustClick()
 
-		return c.JSON(fiber.Map{
-			"status": "ok",
+			emailInput.MustWaitInvisible()
+
+			passwordInput := page.Timeout(30 * time.Second).MustElement(`input[type="password"]`).MustWaitVisible()
+			passwordInput.MustInput(req.Passs)
+			page.Timeout(15 * time.Second).MustElement(`#passwordNext`).MustWaitVisible().MustClick()
+
+			passwordInput.WaitInvisible()
 		})
-	}
 
-	// Store browser session in memory
-	browserSessions[req.Email] = &BrowserSession{
-		Email:     req.Email,
-		Incognito: incognito,
-		Page:      page,
-	}
+		if err != nil {
+			log.Printf("Login error for %s: %v", req.Email, err)
+			incognito.MustClose()
+			return
+		}
+
+		// Check if login was successful
+		if strings.HasPrefix(page.MustInfo().URL, "https://gemini.google.com") {
+			cookies := page.MustCookies()
+			cookiesJSON, err := json.Marshal(cookies)
+			if err != nil {
+				log.Printf("Error marshaling cookies: %v", err)
+			}
+
+			database.DB.Collection("sessions").InsertOne(context.Background(),
+				map[string]any{
+					"email":      req.Email,
+					"cookies":    string(cookiesJSON),
+					"created_at": time.Now(),
+					"updated_at": time.Now(),
+				},
+			)
+
+			incognito.MustClose()
+			delete(browserSessions, req.Email)
+		}
+	}()
 
 	return c.JSON(fiber.Map{
-		"message": "Session created",
+		"message": "Session creation started",
 		"email":   req.Email,
 	})
 }

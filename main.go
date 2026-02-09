@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"zan6/controller"
 	"zan6/database"
@@ -33,5 +34,9 @@ func main() {
 		return c.SendFile("./public/scalar.html")
 	})
 
-	log.Fatal(app.Listen(":2048"))
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "2048"
+	}
+	log.Fatal(app.Listen(":" + port))
 }
