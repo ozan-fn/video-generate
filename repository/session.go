@@ -79,7 +79,7 @@ func (r *SessionRepository) FindAllActive() ([]models.Session, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cursor, err := r.collection.Find(ctx, bson.M{"is_active": true})
+	cursor, err := r.collection.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}

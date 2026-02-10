@@ -4,10 +4,13 @@ go 1.25.6
 
 require (
 	github.com/andybalholm/brotli v1.2.0
+	github.com/armon/go-socks5 v0.0.0-20160902184237-e75332964ef5
 	github.com/go-rod/rod v0.116.2
 	github.com/gofiber/fiber/v2 v2.52.11
+	github.com/joho/godotenv v1.5.1
 	github.com/swaggo/swag v1.16.6
 	go.mongodb.org/mongo-driver v1.17.9
+	golang.org/x/crypto v0.46.0
 )
 
 require (
@@ -20,7 +23,6 @@ require (
 	github.com/go-openapi/swag v0.19.15 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/klauspost/compress v1.18.3 // indirect
 	github.com/mailru/easyjson v0.7.6 // indirect
@@ -40,7 +42,6 @@ require (
 	github.com/ysmood/got v0.40.0 // indirect
 	github.com/ysmood/gson v0.7.3 // indirect
 	github.com/ysmood/leakless v0.9.0 // indirect
-	golang.org/x/crypto v0.46.0 // indirect
 	golang.org/x/mod v0.30.0 // indirect
 	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sync v0.19.0 // indirect
