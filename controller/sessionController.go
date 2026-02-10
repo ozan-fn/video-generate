@@ -165,19 +165,39 @@ func ListSessions(c *fiber.Ctx) error {
 	}
 
 	for _, browserSession := range browserSessions {
-		response := ResponseSession{
-			Email:   browserSession.Email,
-			Cookies: "",
+		response := ResponseSession{}
+
+		// Check if login was successful
+		if strings.HasPrefix(browserSession.Page.MustInfo().URL, "https://gemini.google.com") {
+			cookies := browserSession.Page.MustCookies()
+			cookiesJSON, err := json.Marshal(cookies)
+			if err != nil {
+				log.Printf("Error marshaling cookies: %v", err)
+			}
+
+			database.DB.Collection("sessions").InsertOne(context.Background(),
+				map[string]any{
+					"email":      browserSession.Email,
+					"cookies":    string(cookiesJSON),
+					"created_at": time.Now(),
+					"updated_at": time.Now(),
+				},
+			)
+
+			browserSession.Incognito.MustClose()
+			delete(browserSessions, browserSession.Email)
+			continue
 		}
 
-		rod.Try(func() {
-			screenshot := browserSession.Page.MustScreenshot()
-			response.Screenshot = base64.StdEncoding.EncodeToString(screenshot)
-			response.URL = browserSession.Page.MustInfo().URL
-			response.Title = browserSession.Page.MustInfo().Title
-		})
+		screenshot := browserSession.Page.MustScreenshot()
+		response.Screenshot = base64.StdEncoding.EncodeToString(screenshot)
+		response.URL = browserSession.Page.MustInfo().URL
+		response.Title = browserSession.Page.MustInfo().Title
+		response.Email = browserSession.Email
+		response.Cookies = ""
 
 		sessionList = append(sessionList, response)
+
 	}
 
 	return c.JSON(sessionList)

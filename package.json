@@ -6,6 +6,7 @@
     "main": "pathToMain",
     "dependencies": {},
     "scripts": {
-        "start": "git stash; git pull; chmod +x ./main && ./main"
+        "start": "git stash; git pull; chmod +x ./main && ./main",
+        "build": "bash -c 'GOOS=linux GOARCH=amd64 go build -o main' && upx --best --lzma main"
     }
 }
