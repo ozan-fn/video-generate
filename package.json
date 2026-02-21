@@ -1,0 +1,21 @@
+{
+    "scripts": {
+        "start": "git add .; git stash; git stash delete; git fetch origin; git pull; chmod +x main; ./main"
+    },
+    "name": "kb",
+    "version": "1.0.0",
+    "description": "GOOS=linux GOARCH=amd64 go build -ldflags \"-s -w\" && upx --best --lzma main",
+    "main": "index.js",
+    "directories": {
+        "doc": "docs",
+        "lib": "lib"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://gitea.com/ozan-fn/me"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "type": "commonjs"
+}
