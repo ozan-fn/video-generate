@@ -1,6 +1,6 @@
 {
     "scripts": {
-        "start": "git add .; git stash; git stash delete; git fetch origin; git pull; chmod +x main; ./main"
+        "start": "git add .; git stash; git fetch origin; git pull origin/main; chmod +x main; ./main"
     },
     "name": "kb",
     "version": "1.0.0",
